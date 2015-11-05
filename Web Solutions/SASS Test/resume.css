@@ -1,0 +1,31 @@
+body {
+  font-family: "Roboto", sans-serif;
+  margin: 0;
+  padding: 0; }
+
+h1 {
+  text-align: center; }
+
+h2 {
+  color: #118844; }
+
+.col {
+  float: left; }
+
+main {
+  width: 60%; }
+
+aside {
+  width: 40%; }
+  aside ul {
+    list-style-type: none;
+    padding-left: 0; }
+
+@media (max-width: 600px) {
+  .col {
+    float: none; }
+
+  main, aside {
+    width: 100%; } }
+
+/*# sourceMappingURL=resume.css.map */

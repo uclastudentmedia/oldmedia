@@ -1,0 +1,12 @@
+<ion-view view-title="{{title}}">
+  <ion-content class="has-header">
+    <ion-refresher
+      pulling-text="Pull to refresh..."
+      on-refresh="doRefresh()">
+    </ion-refresher>
+    <ion-item href="#/app/{{channel}}/{{highlight.id}}" class="item" ng-repeat="highlight in highlights">
+        <h2>{{highlight.name}}</h2>
+        <p ng-if="valid(highlight.description_html)" ng-bind-html="highlight.description_html" style="overflow:hidden; height:1.3em"></p>
+    </ion-item>
+  </ion-content>
+</ion-view>

@@ -1,0 +1,366 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Request a Test</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/js/client/2.0.2/firebase.js'></script>
+
+        <link rel="stylesheet" href="css/jquerymobile.nativedroid.css" />
+        <link rel="stylesheet" href="css/jquerymobile.nativedroid.light.css" />
+        <link rel="stylesheet" href="css/jquerymobile.nativedroid.color.blue.css" />
+
+        <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script src="http://malsup.github.io/jquery.blockUI.js"></script> 
+        <script src="js/jstorage.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.js"></script>
+
+        <script>
+            var classArray = new Array();
+
+            var selectIndex = -1;
+
+            var deptArray = new Array();
+
+            var myDataRef = new Firebase('https://testbankucla.firebaseio.com/testbank');
+
+            // Ready up
+
+            $( document ).ready( function() {
+
+                $.blockUI({ 
+                    message: null, 
+                });
+
+                if( window.location.hash != "#loaded" )
+                {
+                    window.location = '#loaded';
+                    window.location.reload();
+                } 
+                init();
+            });
+
+            var dat;
+            function init()
+            {
+                populateDepartments();
+
+                myDataRef.once( 'value', function(dataSnapshot)
+                {
+                    console.log("began");
+                    dat = dataSnapshot.val();
+                    for ( var i in dat )
+                    {
+                        var classString = deptArray[dat[i]['dept']] + " " + dat[i]['numb'];
+                        var classDict = { name: classString, numb: dat[i]['numUps'] };
+                        classArray.push( classDict );
+                    }
+
+                    populateClassList( -1 );
+
+                    $.unblockUI();
+                });
+            }
+
+            // Event handlers
+            $( document ).on( "tap", '#submitForm', function()
+            {
+                pushInput( $("#deptSelect").val(), $("#inputNumber").val(), $("#profInput").val(), $("#quarterYear").val() );
+            });
+
+            $( document ).on( "change", "input[name='radio-choice-h-2']:radio:checked", function() 
+            {
+                selectIndex *= -1;
+                populateClassList( selectIndex );
+            });
+
+            // Assorted functions
+            function createPages()
+            {
+                for ( var i = 0; i < classArray.length; i++ )
+                {
+                    document.write('<div data-theme="f" data-role="page" id="tb' + i + '">');
+                    document.write('</div>');
+                }
+            }
+
+            function populateClassList( sortIndex )
+            {
+                $("#classList").empty();
+
+                switch( sortIndex )
+                {
+                    // NumUps
+                    case 1:
+                        $("#classList").listview({
+                            autodividers:false
+                        }).listview("refresh").trigger('create'); 
+
+                        classArray.sort( function( a, b ) { 
+                            return b['numb'] - a['numb'];
+                        });
+
+                        for ( var item in classArray )
+                        {
+                            $("#classList").append("<li><a href='#'>" + classArray[item]['name'] + "<span id='number" + item + "' class='ui-li-count'>" + classArray[item]['numb'] + "</span><a href='javascript:incrementNumber(" + item + ");'></a></a></li>").listview('refresh');
+                        }
+                        break;
+
+                    // Alphabetical
+                    case -1:
+                        classArray.sort( function( a, b ) {
+                            if (a['name'] < b['name']) return -1;
+                            if (a['name'] > b['name']) return 1;
+                            return 0;
+                        });
+
+                        for ( var item in classArray )
+                        {
+                            $("#classList").append("<li><a href='#'>" + classArray[item]['name'] + "<span id='number" + item + "' class='ui-li-count'>" + classArray[item]['numb'] + "</span><a href='javascript:incrementNumber(" + item + ");'></a></a></li>").listview('refresh');
+                        }
+
+                        $("#classList").listview({
+                            autodividers:true,
+                            dividerTheme: "b",
+                            countTheme: "b", 
+                            autodividersSelector: function ( li ) {
+                                var hi = li.text().split(" ");
+                                return hi[0];
+                            }
+                        }).listview("refresh").trigger('create'); 
+                        $(".ui-li-divider").attr("style", "font-weight:bold");
+                        break;
+                }                
+            }
+
+            var data;
+            function populateDepartments()
+            {
+                if( $.jStorage.get( "departmentJSON", "na" ) != "na" )
+                {
+                    data = $.jStorage.get( "departmentJSON" );
+                    var compositeString = "";
+                    var currLetter = '-';
+
+                    for ( var i = 0; i < data.length; i++ )
+                    {  
+                        if ( data[i]['fields']['acronym'][0] != currLetter )
+                        {
+                            compositeString += '</optgroup>';
+                            currLetter = data[i]['fields']['name'][0];
+                            compositeString += '<optgroup label="' + currLetter + '">';
+                        }
+                        compositeString += '<option value="' + data[i][ 'pk' ] + '">' + data[i][ 'fields' ][ 'acronym' ] + '</option>';
+                        deptArray[data[i]['pk']] = data[i]['fields']['acronym'];
+                    }
+                    $( '#deptSelect' ).append( compositeString );
+                    $( '#deptSelect' ).selectmenu().selectmenu( 'refresh' );
+                    console.log( "Finished population" );
+                }
+                else
+                {
+                    console.log("Branch 2");
+                    $.ajax(
+                    {
+                        url: 'http://majors.uclastudentmedia.com/departments/',
+                        type: 'GET',
+                        crossDomain: true,
+                        data:
+                        {
+                            order_by: "acronym"
+                        },
+                        dataType: 'json',
+                        success: function( json )
+                        {
+                            data = json;
+                            $.jStorage.set( "departmentJSON", json );
+                            var compositeString = "";
+                            var currLetter = '-';
+
+                            for ( var i = 0; i < json.length; i++ )
+                            {  
+                                if ( json[i]['fields']['acronym'][0] != currLetter )
+                                {
+                                    compositeString += '</optgroup>';
+                                    currLetter = json[i]['fields']['name'][0];
+                                    compositeString += '<optgroup label="' + currLetter + '">';
+                                }
+                                compositeString += '<option value="' + json[i][ 'pk' ] + '">' + json[i][ 'fields' ][ 'acronym' ] + '</option>';
+                                deptArray[json[i]['pk']] = json[i]['fields']['acronym'];
+                            }
+                            $( '#deptSelect' ).append( compositeString );
+                            $( '#deptSelect' ).selectmenu( 'refresh' );
+                        },
+                        error: function()
+                        {
+                            window.location.replace = 'http://adeng927.bol.ucla.edu/500.html';
+                        }
+                    });
+                }
+            }
+
+            function incrementNumber( number )
+            {
+                if ( parseInt( $("#number" + number).html()) > classArray[number]['numb'] )
+                {
+                    alert("You have already voted!");
+                }
+                else
+                {
+                    myDataRef.child(Object.keys(dat)[number]).child('numUps').set( dat[Object.keys(dat)[number]]['numUps'] + 1 );
+                    $("#number" + number).html( parseInt($("#number" + number).html()) + 1 );
+                }
+            }
+
+            function pushInput( department, number, prof, qYear )
+            {
+                if ( department == -1 || number == "" )
+                {
+                    alert("Please fill out the required fields!");
+                }
+
+                $.ajax(
+                {   
+                    url: 'http://majors.uclastudentmedia.com/classes/',
+                    type: 'GET',
+                    crossDomain: true,
+                    data:
+                    {
+                        department__id: department,
+                        class_number: number
+                    },
+                    dataType: 'json',
+                    success: function( json )
+                    {
+                        // Check if class exists
+                        if ( json.length == 0 )
+                        {
+                            alert( "This is not a real class!" );
+                        }
+                        else
+                        {
+                            var depNumString = deptArray[department] + " " + number; 
+                            var bool = false;
+                            for ( var i in classArray )
+                            {
+                                console.log( depNumString.trim() );
+                                if ( classArray[i]['name'].trim() == depNumString.trim() )
+                                {
+                                    myDataRef.child(Object.keys(dat)[i]).child('numUps').set( dat[Object.keys(dat)[i]]['numUps'] + 1 );
+                                    $("#number" + number).html( parseInt($("#number" + number).html()) + 1 );
+                                    alert("This class already exists!");
+                                    bool = true;
+                                }
+                            }
+
+                            if ( !bool )
+                            {
+                                var dictionary = { dept: department, numb: number.toUpperCase(), professor: prof, quarterYear: qYear, numUps: 0 };
+                                myDataRef.push(dictionary);   
+                                alert("Your request has been stored!");
+                            }
+                            window.location.reload();
+                        }
+                    }
+                });
+            }
+        </script>
+        <style>
+        .body {
+            background
+        }
+        </style>
+    </head>
+    <body>
+        <!-- Home Page -->
+        <div data-role="page" data-theme="b" data-control-title="Home" id="page1">
+            <div data-role="content">
+                <div class="ui-grid-a" style="padding: 1vw;">
+                    <div class="ui-block-a">
+                        <a id="submission" href="#page2" data-role="button" style="margin-left: 0px">Submit Test</a>
+                    </div>
+                    <div class="ui-block-b">
+                        <a id="requests" href="#page3" data-role="button" style="margin-right: 0px">Request Test</a>
+                    </div>
+                </div>
+                <div style="padding: 1vw;">
+                    <a id="submission" data-role="button" href="http://dev.bruinmobile.com/testbank/">Premium Requests</a>
+                </div>
+                <hr style="height:3px; background-color:#ccc; border:5px; margin-top:5px; margin-bottom:0px;">
+                <div align="center" style="padding:1vw;">
+                    <p>Check a test you are interested in seeing!</p>
+                    <form>
+                        <fieldset data-theme="b" data-role="controlgroup" data-type="horizontal" data-mini="true">
+                            <legend>Sort By:</legend>
+                            <input type="radio" name="radio-choice-h-2" id="radio-choice-h-2a" value="on">
+                            <label for="radio-choice-h-2a">Top</label>
+                            <input type="radio" name="radio-choice-h-2" id="radio-choice-h-2b" value="off" checked="checked">
+                            <label for="radio-choice-h-2b">A - Z</label>
+                        </fieldset>
+                    </form>
+                </div>
+                <ul id="classList" data-split-icon="check" data-role="listview" data-autodividers="true" data-inset="false">
+                </ul>
+            </div>
+        </div>
+
+        <!-- Submission Page -->
+        <div data-role="page" data-control-title="Home" id="page2">
+            <div data-role="content" style="padding:1vw">
+                <h1>Submitting a Test</h1>
+                <p>If you have a test to submit, please email it to:</p>
+                <a href="mailto:testbank@media.ucla.edu?Subject=Test%20Submission" target="_top">testbank@media.ucla.edu</a>
+                <br />
+                <br />
+                <input type="button" value="Back" onClick="history.go(-1)">
+            </div>
+        </div>
+
+        <!-- Request Page -->
+        <div data-role="page" data-control-title="Home" id="page3">
+            <div data-role="content">
+                <div style="padding:1vw">
+                    <h1>Request a Test</h1>
+                    <p>Please fill out the form:</p>
+                </div>
+                <form>
+                    <ul data-role="listview" data-inset="false">
+                        <li data-role="list-divider" class="ui-field-contain">
+                            <b><h1 style="font-weight:bold">Required</h1></b>
+                        </li>
+                        <li class="ui-field-contain">
+                            <label for="deptSelect">Department:</label>
+                            <select name="deptSelect" id="deptSelect">
+                                <option value="-1">Choose:</option>
+                            </select>
+                        </li>
+                        <li class="ui-field-contain">
+                            <label for="inputNumber">Class Number:</label>
+                            <input type="text" name="inputNumber" id="inputNumber" placeholder="Class Number; Ex: 120A, 1B, 144" value="">
+                        </li>
+                        <li data-role="list-divider" class="ui-field-contain">
+                            <b><h1 style="font-weight:bold">Optional</h1></b>
+                        </li>
+                        <li class="ui-field-contain">
+                            <label for="profInput">Professor:</label>
+                            <input type="text" name="profInput" id="profInput" placeholder="Professor; Ex: Mott" value="">
+                        </li>
+                        <li class="ui-field-contain">
+                            <label for="quarterYear">Quarter-Year:</label>
+                            <input type="text" name="quarterYear" id="quarterYear" placeholder="Quarter - Year; Ex: W-14" value="">
+                        </li>
+                        <li class="ui-field-contain">
+                            <a data-role="button" id="submitForm" data-theme="e" href="#page5">Submit</a>
+                        </li>
+                    </div>
+                </form>
+                <hr style="height:3px; background-color:#ccc; border:5px; margin-top:5px; margin-bottom:0px;">
+                <br />
+                <a type="button" class="ui-btn" href="#">Back</a>
+            </div>
+        </div>
+    </body>
+</html>

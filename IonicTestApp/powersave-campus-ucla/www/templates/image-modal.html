@@ -1,0 +1,11 @@
+<ion-modal-view>
+  <ion-header-bar class="bar bar-header bar-custom" on-drag-down="closeModal()">
+    <h1 class="title">{{imageList[cur_index()].name}}</h1>   <!-- Use this if you want to use the name from the JSON: {{imageList[cur_index()].name}} -->
+    <button class="button button-clear button-primary" ng-click="closeModal()">Cancel</button>
+  </ion-header-bar>
+  <ion-content>
+      <ion-scroll zooming="true" direction="xy" locking="false" scrollbar-x="false" scrollbar-y="false" has-bouncing="true" style="width: 100%; height: 100%">
+          <img style="padding: 0px" ng-src="{{imageList[cur_index()].image_large_thumbnail_url}}" />
+      </ion-scroll>
+  </ion-content>
+</ion-modal-view>

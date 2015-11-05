@@ -1,0 +1,237 @@
+<html>
+    <head>
+        <meta charset="utf-8" name="theme-color" content="#0066CC">
+        <title>UCLA Football Updates</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/js/client/2.0.2/firebase.js'></script>
+
+        <script src="../js/twitterFetcher.js"></script>
+        <script src="../js/twitterScraper.js"></script>
+        <script src="../js/cardLib-new.js"></script>
+        <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script src="../js/timeago.js"></script>
+        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+        <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+        <style type="text/css">
+            .cardContainer {
+                white-space : normal;
+            } 
+
+            .ui-page .ui-content .ui-listview .ui-li-desc {
+                white-space : normal;
+            }​            
+
+            #twitterBar {
+                width: 90%;
+                position: absolute;
+                bottom: 0;
+            }
+
+            .test{ padding:0px 20px 0px 20px;}
+
+            .foot{margin:0;padding:0;}
+            #custom-collapsible h3 a.ui-btn { width: 100%; height:30px;}
+            .center-button{margin: 0 auto;padding:0 20px 0 20px;}
+
+            #custom-collapsible h3 a span span.ui-icon {
+                margin: 0 auto !important;
+                margin-top: 2px !important;
+                float: none !important;
+            }
+
+            #custom-collapsible h3.ui-collapsible-heading {
+                margin: -10px -25px 0 !important;
+            }
+
+            #custom-list li:first-child {
+                margin-top: 6px!important;
+            }
+
+            #custom-list {
+                margin: -10px -19px !important;
+            }
+
+            .entryCard {
+                border-radius: 0;
+            }
+
+            .entryCardHeader {
+                border-style:solid !important; 
+                border-right:10px; 
+                border-left:10px; 
+                border-color: #0066CC !important;
+                background-color: #0066CC !important;
+            }
+        </style>
+        <script type="text/javascript">
+            google.load("feeds", "1");
+        </script>
+        <script>
+            var entryArray = new Array();
+            var tweets;
+            var myDataRef = new Firebase('https://wallsucla.firebaseio.com/sports/football/rss');
+            var twitRef = new Firebase('https://wallsucla.firebaseio.com/sports/football/tweets');
+            var loadAmount = 5;
+            var tweetAmount = 10;
+            var endIndex = 0;
+            var endTweet = 0;
+
+            var data;
+
+            /* $(document).scroll(function() {   
+                if($(window).scrollTop() + $(window).height() > $(document).height() - .8*$(document).height()) {
+                    loadMore();
+                }
+            }); */
+
+            var twArray = new Array();
+
+            $(document).ready( function() {
+                getEntries();
+                $(".ui-collapsible-content").insertBefore('#twitterFooter');
+                $(".center-button h3 a").css('background-color', '#0066CC');
+                $(".center-button h3 a").css('border-color', '#0066CC');
+                $('#custom-collapsible').collapsible({
+                    collapse: function( event, ui ) {
+                        $(this).children().next().slideUp(300);
+                    },
+                    expand: function( event, ui ) {
+                        $(this).children().next().hide();
+                        $(this).children().next().slideDown(300);
+                    }
+                });
+
+                getTweets();
+            });
+
+            var counter;
+            var tweetCount;
+
+            // Important Functions
+            function getTweets()
+            {
+                twitRef.orderByChild("publishedDate").limitToLast(tweetAmount).once( 'value', function( dataSnapshot ) {
+                    tweets = dataSnapshot.val();
+
+                    var tweetKeys = sortKeys( tweets );
+
+                    for( var x = endTweet; x < tweetAmount; x++ )
+                    {
+                        var i = tweetKeys[x];
+                        var a = new TweetCard( tweets[i]['text'], tweets[i]['source'], tweets[i]['publishedDate'], tweets[i]['link'], tweets[i]['media'] );
+                    }
+
+                    if( Object.keys( data ).length < loadAmount ) 
+                        $("#tweetContainer").append('<h1 id="noMoreT" align="center" hidden>No More Tweets!</h1>');
+                    else {
+                        $("#tweetContainer").append('<button id="moreButtonT" align="center" onclick="loadTweets();" class="ui-btn">Load More</button>');
+                        $("#moreButtonT").trigger('create');
+                    }
+                });
+            }
+
+            function getEntries()
+            {
+                myDataRef.orderByChild("publishedDate").limitToLast(loadAmount).once( 'value', function( dataSnapshot ) {
+                    data = dataSnapshot.val();
+
+                    if( Object.keys( data ).length < loadAmount )
+                    {
+                        $("#noMore").show();
+                        $("#moreButton").hide();
+                    }
+
+                    var keyArray = sortKeys( data );
+
+                    for( var x = endIndex; x < loadAmount; x++ )
+                    {
+                        var i = keyArray[x];
+                        var a = new Card( data[i]['title'], data[i]['source'], data[i]['publishedDate'], data[i]['link'] );
+                    }
+                });
+            }
+
+            function sortKeys( array ) {
+                var keys = Object.keys( array );
+
+                keys.sort( function( a, b ) {
+                    return array[b]['publishedDate'] - array[a]['publishedDate'];
+                });
+
+                return keys;
+            }
+
+            function loadMore()
+            {
+                var loadConst = 5;
+                loadAmount += loadConst;
+                endIndex += loadConst;
+
+                getEntries();
+            }
+
+            function loadTweets()
+            {
+                var tweetConst = 10;
+                tweetAmount += tweetConst;
+                endTweet += tweetConst;
+                $("#moreButtonT").remove();
+
+                getTweets();
+            }
+
+            // Helper Functions
+            function sortByDate( array )
+            {
+                array.sort( function( a, b ) {
+                    var dateA = new Date( a['publishedDate'] );
+                    var dateB = new Date( b['publishedDate'] );
+
+                    return dateA.getTime() - dateB.getTime();
+                });
+            }
+
+            function highlightTags( string )
+            {
+                var textArray = string.split(' ');
+
+                for ( var i = 0; i < textArray.length; i++ )
+                {
+                    if( textArray[i][0] == "@" || textArray[i][0] == "#" )
+                    {
+                        var endString = "<span style='color: blue'>";
+                        endString += textArray[i];
+                        endString += "</span>";
+
+                        textArray[i] = endString;
+                    }
+                }
+
+                return textArray.join(' ');
+            }
+            
+        </script>
+    </head>
+    <body>
+        <div data-role="page" data-control-title="Home" id="home">
+            <div data-role="content">
+                <!-- <h1 align="center">UCLA Football</h1> -->
+                <div class="cardContainer" id="homeContainer">
+                </div>
+                <button id="moreButton" onclick="loadMore();" class="ui-btn">Load More</button>
+                <h1 id="noMore" align="center" hidden>No More Entries!</h1>
+            </div>
+            <div data-role="footer" data-theme="a" data-content-theme="a" data-inset="false" data-type="horizontal"  data-iconpos="notext" data-position="fixed" class="foot">
+                <div data-role="collapsible" data-theme="a" data-content-theme="a" data-inset="false"  data-collapsed-icon="carat-u"  data-expanded-icon="carat-d" data-iconpos="notext" class="center-button" id="custom-collapsible" style="padding:0px">
+                    <h3>Tweets</h3>
+                    <div class="wrapper" style="height:60vh; overflow:scroll;" id="tweetContainer">
+                    </div>
+                </div><!-- /collapsible -->
+            </div>
+        </div>
+    </body>
+</html>

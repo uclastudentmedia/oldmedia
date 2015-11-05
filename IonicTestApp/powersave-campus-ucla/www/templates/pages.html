@@ -1,0 +1,16 @@
+<ion-view view-title="{{title}}">
+	<ion-content class="has-header" scrollbar-y="false">
+		<ion-slide-box show-pager="false" on-slide-changed="loadMorePosts()">
+			<ion-slide ng-repeat="post in posts" ng-init="updateSlider();" ng-click="clickHandler(post.id);" ng-if="valid(post.image_url);" ng-style="{{fixedHeight}}" >
+			
+				<div class="fit-img" zooming="true" direction="xy">
+					<img ng-src="{{post.tall_image_url}}" ng-style="{{fixedHeight}}" />
+					<h2 ng-if="valid(post.byline)">
+						<p ng-if="valid(post.title)">{{post.title}}</p>
+						<p ng-if="valid(post.subtitle)">{{post.subtitle}}</p>
+					</h2>
+				</div>
+			</ion-slide>
+		</ion-slide-box>
+	</ion-content>
+</ion-view>

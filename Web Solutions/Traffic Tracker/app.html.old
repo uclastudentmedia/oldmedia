@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="themes/colors.css" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Space Utilization Action Research Team</title>
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.1/jquery.mobile.structure-1.3.1.min.css" /> 
+  <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script> 
+  <script src="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.js"></script>
+  <script src="my.js"></script>
+  <script src='https://cdn.firebase.com/v0/firebase.js'></script>
+  <script>
+		// all dialog buttons should close their parent dialog
+		$(".ui-dialog button").live("click", function() {		
+			$("[data-role='dialog']").dialog("close");		
+		});
+		$(document).on("mobileinit", function(){
+		  $.mobile.defaultPageTransition = "slide";
+		});
+  </script>
+
+  <!-- User-generated css -->
+  <style>
+		#footerTabs {
+			background: #FFF -webkit-radial-gradient(circle, #FFF, #dee2e4);
+		}
+		.ui-listview sup {
+			font-size: 0.6em;
+			color: #cc0000;
+		}
+		body
+		{
+			background-color:grey;
+		}
+		a.inv
+		{
+			visibility:hidden;
+		}
+
+	</style>
+
+  <!-- User-generated js -->
+  <script>
+	/**
+	 * 3D-arrays that contains most of the data; this is going to be the second array to obselete 
+	 * pushArray. The first dimension will contain the location, and the second dimension will
+	 * contain all of the submissions. Each submission will then be yet another array that contains
+	 * not only the rating submitted, but the time of submission in UNIX time.
+	 *
+	 * @author		Albert Deng
+	 */
+	var updatedArray = [[[0,$.now() - 60000]], [[0,$.now() - 60000]], [[0,$.now() - 60000]]];
+	
+	var firebaseArray = new Firebase('https://uclastudentmedia.firebaseIO.com/');
+	
+	/**
+	 * Array that holds the names of all of the buttons for the listview pages. This array is defined
+	 * by the populatePages method and is called in the submitResponse method to find the ID of
+	 * the button to set the number.
+	 *
+	 * @author		Albert Deng
+	 */
+	var buttonArray = new Array();
+	
+	/**
+	 * An array that holds the names of all of the time <b> tags. These
+	 * are referenced to update the timestamp for each page.
+	 * 
+	 * @author      	Albert Deng
+	 */
+	var timeArray = new Array();
+
+	var locationArray = new Array();
+	
+	/**
+	* Array that holds the names of all of the items from the listview. This array will be read
+	* by the populatePages method to determine the names of all of the pages.
+	*
+	* @author		Albert Deng
+	*/
+	var nameArray = [ "Ackerman Union", "Powell Library", "Young Research Library" ];
+  
+	/**
+	 * Takes the information from the feedback form and updates the array's prior information.
+	 * Updates the firebaseArray first dimensional index from loc; averages against the existing rating
+	 * with the scale parameter. Intended to be used by the button 'sub'.
+	 * 
+	 * @param loc	The location being modified
+	 * @param scale	The rating
+	 * @author      Albert Deng
+	 */
+	function submitResponse( loc, scale )
+	{
+		var entry = [ scale, $.now() ];
+		firebaseArray[loc].push( entry );
+
+		updatePage( loc );
+
+		alert("Your feedback has been recorded!");
+	}
+
+	function removeOld( loc )
+	{
+		do
+		{
+			if ( firebaseArray[loc].length <= 0 )
+			{
+				break;
+			}
+			var difference = parseInt( $.now() ) - parseInt( firebaseArray[loc][0][1] );
+			if ( difference > 7200000 )
+			{
+				firebaseArray[loc].shift();
+			}
+		}
+		while ( firebaseArray[loc].length > 0 && parseInt( $.now() ) - parseInt( firebaseArray[loc][0][1] ) > 7200000 )
+	}
+
+	/**
+	 * Method that returns the average of all of the entries in the specified location.
+	 *
+	 * @param loc 	The location to work with
+	 * @author		Albert Deng
+	 */
+	function averageRating( loc )
+	{
+		var temporary = 0;
+
+		if ( firebaseArray[loc].length == 0 )
+		{
+			return 0;
+		}
+
+		for ( var x = 0; x < firebaseArray[loc].length; x++ )
+		{
+			temporary += parseInt( firebaseArray[loc][x][0] );
+		}
+
+		var x = temporary/( firebaseArray[loc].length );
+
+		return x.toFixed( 2 );
+	}
+	
+	/**
+	 * Calculates a hex color code based on the numerical average. 
+	 * 
+	 * @param average	The current average of the given location
+	 * @return			A string containing the calculated hexadecimal code
+	 * @author      	Albert Deng
+	 */
+	function colorScale ( average )
+	{
+		var hexArray = [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' ];	
+
+		if ( average == 0 )
+		{
+			return "5px solid #AAA";
+		}
+
+		var index = Math.round( ( average - 1 )/(0.129) );
+		var returnHex = "";
+		
+		if ( index == 16 )
+		{
+			returnHex = "#FF0";
+		}
+		else if ( index < 16 )
+		{
+			var temp = "#F";
+			temp += hexArray[index] + "0";
+			returnHex = temp;
+		}
+		else if ( index > 16 )
+		{
+			var secondTemp = "#";
+			secondTemp += hexArray[( 31 - index )] + "F0";
+			returnHex = secondTemp;
+		}
+		
+		return "5px solid " + returnHex;
+	}
+	
+	/**
+	 * Sets the color of the side gradient for the given item in the
+	 * listview. Calls the colorScale method to return the border-left 
+	 * theme, then sets it for the given location.
+	 * 
+	 * @param loc	The specified listview to set the color
+	 * @param scale	The current average	for that location
+	 * @author      Albert Deng
+	 */
+	function setColor( loc, scale )
+	{
+		if ( loc == 0 )
+		{
+			$('#op0').css('border-left', colorScale( scale ));
+			$('#availist').listview('refresh');
+		}
+		else if ( loc == 1 )
+		{
+			$('#op1').css('border-left', colorScale( scale ));
+			$('#availist').listview('refresh');
+		}
+		else if ( loc == 2 )
+		{
+			$('#op2').css('border-left', colorScale( scale ));
+			$('#availist').listview('refresh');
+		}
+		document.location.href = "#";
+	}
+	
+	/**
+	 * Determines how long ago the specified time occurred; returns it
+	 * as a function of either seconds, minutes, or hours. If the parameter
+	 * is greater than 24 hours, it will return "a long time ago".
+	 * 
+	 * @param oldTime	The time to find a difference for
+	 * @author      	Albert Deng
+	 */
+	function parseTimeDifference( oldTime )
+	{
+		var difference = parseInt( $.now() ) - parseInt( oldTime );
+		
+		if ( difference < 2000 )
+		{
+			return "just now";
+		}
+		else if ( difference >= 2000 && difference < 60000 )
+		{
+			return Math.round( difference/1000 ) + " seconds ago";
+		}
+		else if ( difference >= 60000 && difference < 3600000 )
+		{
+			return Math.round( difference/60000 ) + " minutes ago";
+		}
+		else if ( difference >= 3600000 && difference < 86400000 )
+		{
+			return Math.round ( difference/3600000 ) + " hours ago";
+		}
+		else
+		{
+			return "a long time ago";
+		}
+	}
+	
+	/**
+	 * Updates each content page with a rolling timestamp. Calls the 
+	 * parseTimeDifference method to determine the time elapsed since the 
+	 * last entry was submitted.
+	 * 
+	 * @param loc	The location to update
+	 * @author     	Albert Deng
+	 */
+	function updatePage( loc )
+	{
+		if ( firebaseArray[loc].length == 0 )
+		{
+			$( '#' + timeArray[loc] ).html( "a long time ago" );
+		}
+		else
+		{
+			$( '#' + timeArray[loc] ).html( parseTimeDifference ( firebaseArray[loc][firebaseArray[loc].length - 1][1] ));
+		}
+
+		removeOld( loc );
+
+		setColor ( loc, averageRating( loc ));
+
+		if ( $( '#' + buttonArray[loc] ).html() == 'NaN' )
+		{
+			// First time run
+			$( '#' + buttonArray[loc] ).html( averageRating( loc ));
+		}
+		else
+		{
+			$( '#' + buttonArray[loc] ).html( '<span class="ui-btn-inner ui-btn-corner-all"><span class="ui-btn-text">' + averageRating( loc ) + '</span></span>' );
+		}
+	}
+	
+	/**
+	 * Responsible for creating the pages linked to from the listview on the homepage.
+	 * Also sets up the buttonArray to contain a list of the names for all of the buttons
+	 * that are manipulated by the submitResponse method.
+	 *
+	 * @author		Albert Deng
+	 */
+	function populatePages ()
+	{
+		for ( var i = 0; i < nameArray.length; i++ )
+		{ 
+			// Header Setup
+			document.write('<div data-theme="f" data-role="page" id="fp' + i + '">');
+			document.write('<div data-theme="f" data-role="header">')
+			document.write('<a data-role="button" data-rel="back" onclick="updatePage(' + i + ')" href="#page1" data-icon="arrow-l" data-iconpos="left" class="ui-btn-left">');
+			document.write('Back');
+			document.write('</a>');
+			document.write('<h3>');
+			document.write( nameArray[i] );
+			document.write('</h3>');
+			document.write('</div>');
+			
+			// Page Content Setup
+			document.write('<div data-role="content">');
+			document.write('<a id="butScale' + i + '" data-role="button" class="ui-btn-plain" href="#" value="' + i + '">');
+			document.write( averageRating( i ));
+			document.write('</a><div><p>');
+			document.write("This is <b>" + nameArray[i] + "</b>'s rating for how busy it is ");
+			document.write('on a scale from 1 - 5, with 1 being the MOST busy and 5 being the LEAST busy.');
+			document.write('</p><p>');
+			document.write('Last updated: <b id="timeTag' + i + '">never</b>'); // TODO Setup time input
+			document.write('</p></div>');
+			document.write('<img src="https://maps.googleapis.com/maps/api/staticmap?center=University of California, Los Angeles&amp;zoom=14&amp;size=275x300&amp;markers=' + nameArray[i] + '|&amp;sensor=false">');
+			document.write('</div>');
+			
+			// Tabbar Setup
+			document.write('<div data-role="tabbar" data-iconpos="top" data-theme="f">');
+			document.write('<ul><li>');
+			document.write('<a href="#page1" data-theme="" data-icon="home">Home</a>');
+			document.write('</li><li>');
+			document.write('<a href="#page2" data-theme="" data-icon="plus">Feedback</a>');
+			document.write('</li><li>');
+			document.write('<a href="#page3" data-theme="" data-icon="grid">Map</a>');
+			document.write('</li></ul></div></div>'); 
+			
+			// Button Array Setup
+			buttonArray.push( "butScale" + i );
+			timeArray.push( "timeTag" + i );
+			locationArray.push( "location" + i );
+		} 
+	}
+	
+	/**
+	 * Debug function with various functions.
+	 * 
+	 * @author      Albert Deng
+	 */
+	function debugFunction( index )
+	{
+		
+	}
+  </script>
+</head>
+<body>
+  <!-- Home -->
+  <div data-theme="f" data-role="page" id="page1">
+      <div data-theme="f" data-role="header">
+          <h3>
+              Availability
+          </h3>
+      </div>
+      <div data-role="content">
+          <ul id="availist" data-role="listview" data-divider-theme="f" data-inset="true">
+              <li data-role="list-divider" role="heading">Locations</li>
+              <li id="op0" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false">
+                  <a href="#fp0" data-transition="slide" onclick="updatePage( 0 )" value="0">Ackermann Union</a>
+              </li>
+              <li id="op1" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false">
+                  <a href="#fp1" data-transition="slide" onclick="updatePage( 1 )" value="1">Powell Library</a>
+              </li>
+              <li id="op2" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false">
+                  <a href="#fp2" data-transition="slide" onclick="updatePage( 2 )" value="2">Young Research Library</a>
+              </li>
+          </ul>
+      </div>
+      <div data-role="tabbar" data-iconpos="top" data-theme="f">
+          <ul>
+              <li>
+                  <a href="#page1" data-theme="" data-icon="home">Home</a>
+              </li>
+              <li>
+                  <a href="#page2" data-theme="" data-icon="plus">Feedback</a>
+              </li>
+              <li>
+                  <a href="#page3" data-theme="" data-icon="grid">Map</a>
+              </li>
+          </ul>
+      </div>
+  </div>
+
+  <!-- Submission -->
+  <div data-theme="f" data-role="page" id="page2">
+      <div data-theme="f" data-role="header">
+          <h3>Send Feedback</h3>
+      </div>
+      <div data-theme="f" data-role="content">
+          <div data-role="fieldcontain">
+              <label for="lbar">Where are you?</label>
+              <select id="lbar" name="">
+                  <option value="0">Ackerman Union</option>
+                  <option value="1">Powell Library</option>
+                  <option value="2">Young Research Library</option>
+              </select>
+          </div>
+          <div data-role="fieldcontain">
+              <label for="bbar">How empty is it? (1 = Full, 5 = Empty)</label>
+              <input id="bbar" type="range" name="slider" value="3" min="1" max="5" data-highlight="false">
+          </div>
+          <button type="button" id="sub" onclick="submitResponse($('#lbar').val(),$('#bbar').val())">Submit!</button>
+      </div>
+      <div data-role="tabbar" data-iconpos="top" data-theme="f">
+          <ul>
+              <li>
+                  <a href="#page1" data-theme="" data-icon="home">Home</a>
+              </li>
+              <li>
+                  <a href="#page2" data-theme="" data-icon="plus">Feedback</a>
+              </li>
+              <li>
+                  <a href="#page3" data-theme="" data-icon="grid">Map</a>
+              </li>
+          </ul>
+      </div>
+  </div>
+  <!-- Map -->
+  <div data-theme="f" data-role="page" id="page3">
+      <div data-theme="f" data-role="header">
+          <h3>Map</h3>
+      </div>
+      <div data-role="content">
+          <img src="https://maps.googleapis.com/maps/api/staticmap?center=University of California, Los Angeles&amp;zoom=14&amp;size=275x300&amp;markers=Ackerman Union|&amp;sensor=false">
+      </div>
+      <div data-role="tabbar" data-iconpos="top" data-theme="f">
+			<ul>
+				<li>
+					<a href="#page1" data-theme="" data-icon="home">Home</a>
+				</li>
+				<li>
+					<a href="#page2" data-theme="" data-icon="plus">Feedback</a>
+				</li>
+				<li>
+					<a href="#page3" data-theme="" data-icon="grid">Map</a>
+				</li>
+			</ul>
+      </div>
+  </div>
+  
+  <!-- Location Page --> 
+  <script type="text/javascript" language="JavaScript">
+		populatePages();
+  </script>
+  
+</body>
+</html>

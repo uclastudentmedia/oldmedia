@@ -1,0 +1,17 @@
+<ion-view view-title="{{title}}">
+  <ion-content class="has-header">
+    <ion-refresher
+      pulling-text="Pull to refresh..."
+      on-refresh="doRefresh()">
+    </ion-refresher>
+    <div ng-repeat="event in events">
+        <ion-item ng-if="!isDivider(event)" ng-href="#/app/{{channel}}/{{event.id}}">
+            <h2>{{event.title}}</h2>
+            <p ng-if="valid(event.start_date)">{{showDate(event.start_date)}}</p>
+        </ion-item>
+        <ion-item ng-if="isDivider(event)" class="item-divider">
+            <h2><b>{{event.title}}</b></h2>
+        </ion-item>
+    </div>
+  </ion-content>
+</ion-view>

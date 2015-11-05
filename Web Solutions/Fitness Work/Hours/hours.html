@@ -1,0 +1,1418 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Dining Hours</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.js"></script>
+        <script>
+            var diningHallLocs = [ "covel", "deneve", "feast", "bplate" ];
+
+            var cafeLocs = [ "bcafe", "rend", "cafe" ];
+
+            var lateNightLocs = [ "dNeveLN", "hedrickLN" ];
+
+            var covelOpenTimes = [ [ 7, "AM" ], [ 11, "AM" ], [ 5, "PM" ] ];
+            var covelCloseTimes = [ [ 10, "AM" ], [ 2, "PM" ], [ 9, "PM" ] ];
+
+            var covelWEOpenTimes = [ [ 9.5, "AM" ], [ 5, "PM" ] ];
+            var covelWECloseTimes = [ [ 3, "PM" ], [ 9, "PM" ] ];
+
+            var deneveOpenTimes = [ [ 7, "AM" ], [ 11, "AM" ], [ 5, "PM" ] ];
+            var deneveCloseTimes = [ [ 10, "AM" ], [ 2, "PM" ], [ 8, "PM" ] ];
+
+            var deneveWEOpenTimes = [ [ 9.5, "AM" ], [ 5, "PM" ] ];
+            var deneveWECloseTimes = [ [ 2, "PM" ], [ 8, "PM" ] ];
+
+            var feastOpenTimes = [ [ 11, "AM" ], [ 5, "PM" ] ];
+            var feastCloseTimes = [ [ 2, "PM" ], [ 8, "PM" ] ];
+
+            var bplateOpenTimes = [ [ 7, "AM" ], [ 11, "AM" ], [ 5, "PM" ] ];
+            var bplateCloseTimes = [ [ 9, "AM" ], [ 2, "PM" ], [ 8, "PM" ] ];
+
+            var bplateWEOpenTimes = [ [ 10, "AM" ], [ 5, "PM" ] ];
+            var bplateWECloseTimes = [ [ 2, "PM" ], [ 8, "PM" ] ];
+
+            var bcafeOpenTimes = [ [ 7, "AM" ], [ 2, "PM" ], [ 8, "PM" ] ];
+            var bcafeCloseTimes = [ [ 1.5, "PM" ], [ 7.5, "PM" ], [ 2, "AM" ] ];
+
+            var denevegoOpenTimes = [ [ 7, "AM" ], [ 2, "PM" ] ];
+            var denevegoCloseTimes = [ [ 2, "PM" ], [ 2, "PM" ] ];
+
+            var bcafeWEOpenTimes = [ [ 3, "PM" ], [ 2, "AM" ] ];
+            var bcafeWECloseTimes = [ [ 2, "AM" ], [ 2, "AM" ] ];
+
+            var rendOpenTimes = [ [ 7, "AM" ], [ 12, "PM" ], [ 5, "PM" ] ];
+            var rendCloseTimes = [ [ 11, "AM" ], [ 4, "PM" ], [ 12, "AM" ] ];
+
+            var cafeOpenTimes = [ [ 11, "AM" ], [ 5, "PM" ] ];
+            var cafeCloseTimes = [ [ 3, "PM" ], [ 12, "AM" ] ];
+
+            // duplicates required because app doesn't work otherwise
+            var dNeveLNOpenTimes = [ [ 9, "PM" ], [ 12, "AM" ] ];
+            var dNeveLNCloseTimes = [ [ 12, "AM" ], [ 12, "AM" ] ];
+
+            var hedrickLNOpenTimes = [ [ 8, "PM" ], [ 1, "AM" ] ];
+            var hedrickLNCloseTimes = [ [ 1, "AM" ], [ 1, "AM" ] ];
+
+
+            $(document).ready(function() {
+                $("a").css('background-color', '#FFFFFF');
+                $("a").css('font-family', 'serif');
+            });
+
+            // TODO: ALL ARE CLOSED
+
+            // Slider code
+            $( document ).on( "change", "#timeSlider", function() {
+                changeString( $("#timeSlider").val());
+                var date = new Date( $.now() );
+                if ( date.getDay() == 0 || date.getDay() == 6 )
+                {
+                    covelWETimeUpdate();
+                    deneveWETimeUpdate();
+                    bcafeWETimeUpdate();
+                    bplateWETimeUpdate();
+                    closedTimeUpdates();
+                }
+                else
+                {
+                    covelTimeUpdate();
+                    denevegoTimeUpdate();
+                    deneveTimeUpdate();
+                    bplateTimeUpdate();
+                    bcafeTimeUpdate();
+                    hedrickLNTimeUpdate();
+                    cafeTimeUpdate();
+                    rendTimeUpdate();
+                }
+
+                feastTimeUpdate();
+                dNeveLNTimeUpdate();
+            });
+
+            function hoursInit()
+            {
+                changeString( unixToMe( $.now()));
+                $("#timeSlider").val( unixToMe( $.now())).slider('refresh');
+                $(".ui-slider-input").hide();
+
+                $(".divi").css('background-color', '#6ECCFF');
+                $('#nowButton').css('background-color', '#6ECCFF');
+                $(".divi").css('font-size', '1.2em' );
+            }
+
+            // Date time conversion code
+            function setTime( value )
+            {
+                var date = new Date ( $.now() );
+                date.setMinutes( value % 60 );
+                if ( value >= 0 && value <= 1020 )
+                {
+                    date.setHours( Math.floor( value / 60 ) + 7 );
+                }
+                else if ( value > 1020 && value <= 1140 )
+                {
+                    date.setHours( Math.floor( value / 60 ) - 17 );
+                }
+                return date;
+            }
+
+            function unixToMe( unixTime )
+            {
+                var date = new Date( unixTime );
+
+                var hours = date.getHours();
+                var minutes = date.getMinutes();
+
+                var num = 0;
+
+                if ( hours <= 23 && hours > 7 )
+                {
+                    num += ( hours * 60 ) - 420 + minutes;
+                }
+                else
+                {
+                    num += ( hours * 60 ) + 1020 + minutes;
+                }
+
+                return num;
+            }
+
+            function regularToMe( plug )
+            {
+                var hour = plug[0];
+                var AMPM = plug[1];
+
+                switch ( AMPM )
+                {
+                    case "AM":
+                        if ( hour <= 2 )
+                        {
+                            return 1020 + ( hour * 60 );
+                        }
+                        else if ( hour == 12 )
+                        {
+                            return 1020;
+                        }
+                        else
+                        {
+                            return ( hour * 60 ) - 420;
+                        }
+                        break;
+
+                    case "PM":
+                        if ( hour == 12 )
+                        {
+                            return 300;
+                        }
+                        else
+                        {
+                            return 300 + ( hour * 60 );
+                        }
+                        break;
+                }
+                return 0;
+            }
+
+            function dateString ( hour, minute )
+            {
+                if ( hour < 12 && hour > 0 )
+                {
+                    return ( hour + ":" + minute + " AM" );
+                }   
+                else if ( hour == 12 )
+                {
+                    return ( hour + ":" + minute + " PM" );
+                }
+                else if ( hour == 0 )
+                {
+                    return ( "12:" + minute + " AM" );
+                }
+                else 
+                {
+                    return ( hour - 12 + ":" + minute + " PM" );
+                }
+            }
+
+            function changeString( value )
+            {
+                var date = setTime( value );
+
+                var hours = date.getHours();
+                var minutes = date.getMinutes();
+                if ( minutes < 10 ) 
+                {
+                    minutes = "0" + minutes;
+                }
+
+                $('#timeOut').text( dateString( hours, minutes ));
+            }
+
+            function inRange( value, open, close )
+            {
+                return value > open && value < close;
+            }
+
+            // Location time checkers
+            function covelTimeUpdate()
+            {
+                var currTime = $("#timeSlider").val();
+                var openTime = 10000;
+                var closeTime = 10000;
+                var openIndex = -1;
+                var lastTime = regularToMe( covelCloseTimes[covelCloseTimes.length - 1] );
+
+                for ( var i = 0; i < covelOpenTimes.length; i++ )
+                {
+                    if ( inRange( currTime, regularToMe( covelOpenTimes[i] ), regularToMe( covelCloseTimes[i] )))
+                    {
+                        openTime = regularToMe( covelOpenTimes[i] );
+                        closeTime = regularToMe( covelCloseTimes[i] );
+                        openIndex = i;
+                        break;
+                    }
+                }
+
+                if ( openIndex == -1 )
+                {
+                    for ( var i = 0; i < covelOpenTimes.length; i++ )
+                    {
+                        if ( Math.abs( regularToMe( covelOpenTimes[i] ) - currTime ) < Math.abs( openTime - currTime ))
+                        {
+                            openTime = regularToMe( covelOpenTimes[i] );
+                            openIndex = 1;
+                        }
+                    }
+                    closeTime = regularToMe( covelCloseTimes[openIndex] );
+                }
+
+                if ( currTime < openTime )
+                {
+                    $('#covelOC').text('opens in ' + Math.floor(Math.abs(currTime - openTime)/60) + ' hr ' + Math.abs(currTime - openTime)%60 + " min" );
+                    $("#covelOC").css( "color", "red" );
+                }
+                else if ( currTime >= openTime && currTime < closeTime )
+                {
+                    $('#covelOC').text('closes in ' + Math.floor(Math.abs(currTime - closeTime)/60) + ' hr ' + Math.abs(currTime - closeTime)%60 + " min" );
+                    $('#covelOC').css( "color", "green" );
+                }
+                
+                if ( currTime >= lastTime )
+                {
+                    $("#covelOC").text('is closed for today');
+                    $("#covelOC").css( "color", "red" );
+                }
+            }
+
+            function deneveTimeUpdate()
+            {
+                var currTime = $("#timeSlider").val();
+                var openTime = 10000;
+                var closeTime = 10000;
+                var openIndex = -1;
+                var lastTime = regularToMe( deneveCloseTimes[deneveCloseTimes.length - 1] );
+
+                for ( var i = 0; i < deneveOpenTimes.length; i++ )
+                {
+                    if ( inRange( currTime, regularToMe( deneveOpenTimes[i] ), regularToMe( deneveCloseTimes[i] )))
+                    {
+                        openTime = regularToMe( deneveOpenTimes[i] );
+                        closeTime = regularToMe( deneveCloseTimes[i] );
+                        openIndex = i;
+                        break;
+                    }
+                }
+
+                if ( openIndex == -1 )
+                {
+                    for ( var i = 0; i < deneveOpenTimes.length; i++ )
+                    {
+                        if ( Math.abs( regularToMe( deneveOpenTimes[i] ) - currTime ) < Math.abs( openTime - currTime ))
+                        {
+                            openTime = regularToMe( deneveOpenTimes[i] );
+                            openIndex = 1;
+                        }
+                    }
+                    closeTime = regularToMe( deneveCloseTimes[openIndex] );
+                }
+
+                if ( currTime < openTime )
+                {
+                    $('#deneveOC').text('opens in ' + Math.floor(Math.abs(currTime - openTime)/60) + ' hr ' + Math.abs(currTime - openTime)%60 + " min" );
+                    $("#deneveOC").css( "color", "red" );
+                }
+                else if ( currTime >= openTime && currTime < closeTime )
+                {
+                    $('#deneveOC').text('closes in ' + Math.floor(Math.abs(currTime - closeTime)/60) + ' hr ' + Math.abs(currTime - closeTime)%60 + " min" );
+                    $('#deneveOC').css( "color", "green" );
+                }
+                
+                if ( currTime >= lastTime )
+                {
+                    $("#deneveOC").text('is closed for today');
+                    $("#deneveOC").css( "color", "red" );
+                }
+            }
+
+            function feastTimeUpdate()
+            {
+                var currTime = $("#timeSlider").val();
+                var openTime = 10000;
+                var closeTime = 10000;
+                var openIndex = -1;
+                var lastTime = regularToMe( feastCloseTimes[feastCloseTimes.length - 1] );
+
+                for ( var i = 0; i < feastOpenTimes.length; i++ )
+                {
+                    if ( inRange( currTime, regularToMe( feastOpenTimes[i] ), regularToMe( feastCloseTimes[i] )))
+                    {
+                        openTime = regularToMe( feastOpenTimes[i] );
+                        closeTime = regularToMe( feastCloseTimes[i] );
+                        openIndex = i;
+                        break;
+                    }
+                }
+
+                if ( openIndex == -1 )
+                {
+                    for ( var i = 0; i < feastOpenTimes.length; i++ )
+                    {
+                        if ( Math.abs( regularToMe( feastOpenTimes[i] ) - currTime ) < Math.abs( openTime - currTime ))
+                        {
+                            openTime = regularToMe( feastOpenTimes[i] );
+                            openIndex = 1;
+                        }
+                    }
+                    closeTime = regularToMe( feastCloseTimes[openIndex] );
+                }
+
+                if ( currTime < openTime )
+                {
+                    $('#feastOC').text('opens in ' + Math.floor(Math.abs(currTime - openTime)/60) + ' hr ' + Math.abs(currTime - openTime)%60 + " min" );
+                    $("#feastOC").css( "color", "red" );
+                }
+                else if ( currTime >= openTime && currTime < closeTime )
+                {
+                    $('#feastOC').text('closes in ' + Math.floor(Math.abs(currTime - closeTime)/60) + ' hr ' + Math.abs(currTime - closeTime)%60 + " min" );
+                    $('#feastOC').css( "color", "green" );
+                }
+                
+                if ( currTime >= lastTime )
+                {
+                    $("#feastOC").text('is closed for today');
+                    $("#feastOC").css( "color", "red" );
+                }
+            }
+
+            function bplateTimeUpdate()
+            {
+                var currTime = $("#timeSlider").val();
+                var openTime = 10000;
+                var closeTime = 10000;
+                var openIndex = -1;
+                var lastTime = regularToMe( bplateCloseTimes[bplateCloseTimes.length - 1] );
+
+                for ( var i = 0; i < bplateOpenTimes.length; i++ )
+                {
+                    if ( inRange( currTime, regularToMe( bplateOpenTimes[i] ), regularToMe( bplateCloseTimes[i] )))
+                    {
+                        openTime = regularToMe( bplateOpenTimes[i] );
+                        closeTime = regularToMe( bplateCloseTimes[i] );
+                        openIndex = i;
+                        break;
+                    }
+                }
+
+                if ( openIndex == -1 )
+                {
+                    for ( var i = 0; i < bplateOpenTimes.length; i++ )
+                    {
+                        if ( Math.abs( regularToMe( bplateOpenTimes[i] ) - currTime ) < Math.abs( openTime - currTime ))
+                        {
+                            openTime = regularToMe( bplateOpenTimes[i] );
+                            openIndex = 1;
+                        }
+                    }
+                    closeTime = regularToMe( bplateCloseTimes[openIndex] );
+                }
+
+                if ( currTime < openTime )
+                {
+                    $('#bplateOC').text('opens in ' + Math.floor(Math.abs(currTime - openTime)/60) + ' hr ' + Math.abs(currTime - openTime)%60 + " min" );
+                    $("#bplateOC").css( "color", "red" );
+                }
+                else if ( currTime >= openTime && currTime < closeTime )
+                {
+                    $('#bplateOC').text('closes in ' + Math.floor(Math.abs(currTime - closeTime)/60) + ' hr ' + Math.abs(currTime - closeTime)%60 + " min" );
+                    $('#bplateOC').css( "color", "green" );
+                }
+                
+                if ( currTime >= lastTime )
+                {
+                    $("#bplateOC").text('is closed for today');
+                    $("#bplateOC").css( "color", "red" );
+                }
+            }
+
+            function bcafeTimeUpdate()
+            {
+                var currTime = $("#timeSlider").val();
+                var openTime = 10000;
+                var closeTime = 10000;
+                var openIndex = -1;
+                var lastTime = regularToMe( bcafeCloseTimes[bcafeCloseTimes.length - 1] );
+
+                for ( var i = 0; i < bcafeOpenTimes.length; i++ )
+                {
+                    if ( inRange( currTime, regularToMe( bcafeOpenTimes[i] ), regularToMe( bcafeCloseTimes[i] )))
+                    {
+                        openTime = regularToMe( bcafeOpenTimes[i] );
+                        closeTime = regularToMe( bcafeCloseTimes[i] );
+                        openIndex = i;
+                        break;
+                    }
+                }
+
+                if ( openIndex == -1 )
+                {
+                    for ( var i = 0; i < bcafeOpenTimes.length; i++ )
+                    {
+                        if ( Math.abs( regularToMe( bcafeOpenTimes[i] ) - currTime ) < Math.abs( openTime - currTime ))
+                        {
+                            openTime = regularToMe( bcafeOpenTimes[i] );
+                            openIndex = 1;
+                        }
+                    }
+                    closeTime = regularToMe( bcafeCloseTimes[openIndex] );
+                }
+
+                if ( currTime < openTime )
+                {
+                    $('#bcafeOC').text('opens in ' + Math.floor(Math.abs(currTime - openTime)/60) + ' hr ' + Math.abs(currTime - openTime)%60 + " min" );
+                    $("#bcafeOC").css( "color", "red" );
+                }
+                else if ( currTime >= openTime && currTime < closeTime )
+                {
+                    $('#bcafeOC').text('closes in ' + Math.floor(Math.abs(currTime - closeTime)/60) + ' hr ' + Math.abs(currTime - closeTime)%60 + " min" );
+                    $('#bcafeOC').css( "color", "green" );
+                }
+                
+                if ( currTime >= lastTime )
+                {
+                    $("#bcafeOC").text('is closed for today');
+                    $("#bcafeOC").css( "color", "red" );
+                }
+            }
+
+            function rendTimeUpdate()
+            {
+                var currTime = $("#timeSlider").val();
+                var openTime = 10000;
+                var closeTime = 10000;
+                var openIndex = -1;
+                var lastTime = regularToMe( rendCloseTimes[rendCloseTimes.length - 1] );
+
+                for ( var i = 0; i < rendOpenTimes.length; i++ )
+                {
+                    if ( inRange( currTime, regularToMe( rendOpenTimes[i] ), regularToMe( rendCloseTimes[i] )))
+                    {
+                        openTime = regularToMe( rendOpenTimes[i] );
+                        closeTime = regularToMe( rendCloseTimes[i] );
+                        openIndex = i;
+                        break;
+                    }
+                }
+
+                if ( openIndex == -1 )
+                {
+                    for ( var i = 0; i < rendOpenTimes.length; i++ )
+                    {
+                        if ( Math.abs( regularToMe( rendOpenTimes[i] ) - currTime ) < Math.abs( openTime - currTime ))
+                        {
+                            openTime = regularToMe( rendOpenTimes[i] );
+                            openIndex = 1;
+                        }
+                    }
+                    closeTime = regularToMe( rendCloseTimes[openIndex] );
+                }
+
+                if ( currTime < openTime )
+                {
+                    $('#rendOC').text('opens in ' + Math.floor(Math.abs(currTime - openTime)/60) + ' hr ' + Math.abs(currTime - openTime)%60 + " min" );
+                    $("#rendOC").css( "color", "red" );
+                }
+                else if ( currTime >= openTime && currTime < closeTime )
+                {
+                    $('#rendOC').text('closes in ' + Math.floor(Math.abs(currTime - closeTime)/60) + ' hr ' + Math.abs(currTime - closeTime)%60 + " min" );
+                    $('#rendOC').css( "color", "green" );
+                }
+                
+                if ( currTime >= lastTime )
+                {
+                    $("#rendOC").text('is closed for today');
+                    $("#rendOC").css( "color", "red" );
+                }
+            }
+
+            function cafeTimeUpdate()
+            {
+                var currTime = $("#timeSlider").val();
+                var openTime = 10000;
+                var closeTime = 10000;
+                var openIndex = -1;
+                var lastTime = regularToMe( cafeCloseTimes[cafeCloseTimes.length - 1] );
+
+                for ( var i = 0; i < cafeOpenTimes.length; i++ )
+                {
+                    if ( inRange( currTime, regularToMe( cafeOpenTimes[i] ), regularToMe( cafeCloseTimes[i] )))
+                    {
+                        openTime = regularToMe( cafeOpenTimes[i] );
+                        closeTime = regularToMe( cafeCloseTimes[i] );
+                        openIndex = i;
+                        break;
+                    }
+                }
+
+                if ( openIndex == -1 )
+                {
+                    for ( var i = 0; i < cafeOpenTimes.length; i++ )
+                    {
+                        if ( Math.abs( regularToMe( cafeOpenTimes[i] ) - currTime ) < Math.abs( openTime - currTime ))
+                        {
+                            openTime = regularToMe( cafeOpenTimes[i] );
+                            openIndex = 1;
+                        }
+                    }
+                    closeTime = regularToMe( cafeCloseTimes[openIndex] );
+                }
+
+                if ( currTime < openTime )
+                {
+                    $('#cafeOC').text('opens in ' + Math.floor(Math.abs(currTime - openTime)/60) + ' hr ' + Math.abs(currTime - openTime)%60 + " min" );
+                    $("#cafeOC").css( "color", "red" );
+                }
+                else if ( currTime >= openTime && currTime < closeTime )
+                {
+                    $('#cafeOC').text('closes in ' + Math.floor(Math.abs(currTime - closeTime)/60) + ' hr ' + Math.abs(currTime - closeTime)%60 + " min" );
+                    $('#cafeOC').css( "color", "green" );
+                }
+                
+                if ( currTime >= lastTime )
+                {
+                    $("#cafeOC").text('is closed for today');
+                    $("#cafeOC").css( "color", "red" );
+                }
+            }
+
+            function dNeveLNTimeUpdate()
+            {
+                var currTime = $("#timeSlider").val();
+                var openTime = 10000;
+                var closeTime = 10000;
+                var openIndex = -1;
+                var lastTime = regularToMe( dNeveLNCloseTimes[dNeveLNCloseTimes.length - 1] );
+
+                for ( var i = 0; i < dNeveLNOpenTimes.length; i++ )
+                {
+                    if ( inRange( currTime, regularToMe( dNeveLNOpenTimes[i] ), regularToMe( dNeveLNCloseTimes[i] )))
+                    {
+                        openTime = regularToMe( dNeveLNOpenTimes[i] );
+                        closeTime = regularToMe( dNeveLNCloseTimes[i] );
+                        openIndex = i;
+                        break;
+                    }
+                }
+
+                if ( openIndex == -1 )
+                {
+                    for ( var i = 0; i < dNeveLNOpenTimes.length; i++ )
+                    {
+                        if ( Math.abs( regularToMe( dNeveLNOpenTimes[i] ) - currTime ) < Math.abs( openTime - currTime ))
+                        {
+                            openTime = regularToMe( dNeveLNOpenTimes[i] );
+                            openIndex = 1;
+                        }
+                    }
+                    closeTime = regularToMe( dNeveLNCloseTimes[openIndex] );
+                }
+
+                if ( currTime < openTime )
+                {
+                    $('#dNeveLNOC').text('opens in ' + Math.floor(Math.abs(currTime - openTime)/60) + ' hr ' + Math.abs(currTime - openTime)%60 + " min" );
+                    $("#dNeveLNOC").css( "color", "red" );
+                }
+                else if ( currTime >= openTime && currTime < closeTime )
+                {
+                    $('#dNeveLNOC').text('closes in ' + Math.floor(Math.abs(currTime - closeTime)/60) + ' hr ' + Math.abs(currTime - closeTime)%60 + " min" );
+                    $('#dNeveLNOC').css( "color", "green" );
+                }
+                
+                if ( currTime >= lastTime )
+                {
+                    $("#dNeveLNOC").text('is closed for today');
+                    $("#dNeveLNOC").css( "color", "red" );
+                }
+            }
+
+            function denevegoTimeUpdate()
+            {
+                var currTime = $("#timeSlider").val();
+                var openTime = 10000;
+                var closeTime = 10000;
+                var openIndex = -1;
+                var lastTime = regularToMe( denevegoCloseTimes[denevegoCloseTimes.length - 1] );
+
+                for ( var i = 0; i < denevegoOpenTimes.length; i++ )
+                {
+                    if ( inRange( currTime, regularToMe( denevegoOpenTimes[i] ), regularToMe( denevegoCloseTimes[i] )))
+                    {
+                        openTime = regularToMe( denevegoOpenTimes[i] );
+                        closeTime = regularToMe( denevegoCloseTimes[i] );
+                        openIndex = i;
+                        break;
+                    }
+                }
+
+                if ( openIndex == -1 )
+                {
+                    for ( var i = 0; i < denevegoOpenTimes.length; i++ )
+                    {
+                        if ( Math.abs( regularToMe( denevegoOpenTimes[i] ) - currTime ) < Math.abs( openTime - currTime ))
+                        {
+                            openTime = regularToMe( denevegoOpenTimes[i] );
+                            openIndex = 1;
+                        }
+                    }
+                    closeTime = regularToMe( denevegoCloseTimes[openIndex] );
+                }
+
+                if ( currTime < openTime )
+                {
+                    $('#denevegoOC').text('opens in ' + Math.floor(Math.abs(currTime - openTime)/60) + ' hr ' + Math.abs(currTime - openTime)%60 + " min" );
+                    $("#denevegoOC").css( "color", "red" );
+                }
+                else if ( currTime >= openTime && currTime < closeTime )
+                {
+                    $('#denevegoOC').text('closes in ' + Math.floor(Math.abs(currTime - closeTime)/60) + ' hr ' + Math.abs(currTime - closeTime)%60 + " min" );
+                    $('#denevegoOC').css( "color", "green" );
+                }
+                
+                if ( currTime >= lastTime )
+                {
+                    $("#denevegoOC").text('is closed for today');
+                    $("#denevegoOC").css( "color", "red" );
+                }
+            }
+
+            function hedrickLNTimeUpdate()
+            {
+                var currTime = $("#timeSlider").val();
+                var openTime = 10000;
+                var closeTime = 10000;
+                var openIndex = -1;
+                var lastTime = regularToMe( hedrickLNCloseTimes[hedrickLNCloseTimes.length - 1] );
+
+                for ( var i = 0; i < hedrickLNOpenTimes.length; i++ )
+                {
+                    if ( inRange( currTime, regularToMe( hedrickLNOpenTimes[i] ), regularToMe( hedrickLNCloseTimes[i] )))
+                    {
+                        openTime = regularToMe( hedrickLNOpenTimes[i] );
+                        closeTime = regularToMe( hedrickLNCloseTimes[i] );
+                        openIndex = i;
+                        break;
+                    }
+                }
+
+                if ( openIndex == -1 )
+                {
+                    for ( var i = 0; i < hedrickLNOpenTimes.length; i++ )
+                    {
+                        if ( Math.abs( regularToMe( hedrickLNOpenTimes[i] ) - currTime ) < Math.abs( openTime - currTime ))
+                        {
+                            openTime = regularToMe( hedrickLNOpenTimes[i] );
+                            openIndex = 1;
+                        }
+                    }
+                    closeTime = regularToMe( hedrickLNCloseTimes[openIndex] );
+                }
+
+                if ( currTime < openTime )
+                {
+                    $('#hedrickLNOC').text('opens in ' + Math.floor(Math.abs(currTime - openTime)/60) + ' hr ' + Math.abs(currTime - openTime)%60 + " min" );
+                    $("#hedrickLNOC").css( "color", "red" );
+                }
+                else if ( currTime >= openTime && currTime < closeTime )
+                {
+                    $('#hedrickLNOC').text('closes in ' + Math.floor(Math.abs(currTime - closeTime)/60) + ' hr ' + Math.abs(currTime - closeTime)%60 + " min" );
+                    $('#hedrickLNOC').css( "color", "green" );
+                }
+                
+                if ( currTime >= lastTime )
+                {
+                    $("#hedrickLNOC").text('is closed for today');
+                    $("#hedrickLNOC").css( "color", "red" );
+                }
+            }
+
+            function covelWETimeUpdate()
+            {
+                var currTime = $("#timeSlider").val();
+                var openTime = 10000;
+                var closeTime = 10000;
+                var openIndex = -1;
+                var lastTime = regularToMe( covelWECloseTimes[covelWECloseTimes.length - 1] );
+
+                for ( var i = 0; i < covelWEOpenTimes.length; i++ )
+                {
+                    if ( inRange( currTime, regularToMe( covelWEOpenTimes[i] ), regularToMe( covelWECloseTimes[i] )))
+                    {
+                        openTime = regularToMe( covelWEOpenTimes[i] );
+                        closeTime = regularToMe( covelWECloseTimes[i] );
+                        openIndex = i;
+                        break;
+                    }
+                }
+
+                if ( openIndex == -1 )
+                {
+                    for ( var i = 0; i < covelWEOpenTimes.length; i++ )
+                    {
+                        if ( Math.abs( regularToMe( covelWEOpenTimes[i] ) - currTime ) < Math.abs( openTime - currTime ))
+                        {
+                            openTime = regularToMe( covelWEOpenTimes[i] );
+                            openIndex = 1;
+                        }
+                    }
+                    closeTime = regularToMe( covelWECloseTimes[openIndex] );
+                }
+
+                if ( currTime < openTime )
+                {
+                    $('#covelOC').text('opens in ' + Math.floor(Math.abs(currTime - openTime)/60) + ' hr ' + Math.abs(currTime - openTime)%60 + " min" );
+                    $("#covelOC").css( "color", "red" );
+                }
+                else if ( currTime >= openTime && currTime < closeTime )
+                {
+                    $('#covelOC').text('closes in ' + Math.floor(Math.abs(currTime - closeTime)/60) + ' hr ' + Math.abs(currTime - closeTime)%60 + " min" );
+                    $('#covelOC').css( "color", "green" );
+                }
+                
+                if ( currTime >= lastTime )
+                {
+                    $("#covelOC").text('is closed for today');
+                    $("#covelOC").css( "color", "red" );
+                }
+            }
+
+            function deneveWETimeUpdate()
+            {
+                var currTime = $("#timeSlider").val();
+                var openTime = 10000;
+                var closeTime = 10000;
+                var openIndex = -1;
+                var lastTime = regularToMe( deneveWECloseTimes[deneveWECloseTimes.length - 1] );
+
+                for ( var i = 0; i < deneveWEOpenTimes.length; i++ )
+                {
+                    if ( inRange( currTime, regularToMe( deneveWEOpenTimes[i] ), regularToMe( deneveWECloseTimes[i] )))
+                    {
+                        openTime = regularToMe( deneveWEOpenTimes[i] );
+                        closeTime = regularToMe( deneveWECloseTimes[i] );
+                        openIndex = i;
+                        break;
+                    }
+                }
+
+                if ( openIndex == -1 )
+                {
+                    for ( var i = 0; i < deneveWEOpenTimes.length; i++ )
+                    {
+                        if ( Math.abs( regularToMe( deneveWEOpenTimes[i] ) - currTime ) < Math.abs( openTime - currTime ))
+                        {
+                            openTime = regularToMe( deneveWEOpenTimes[i] );
+                            openIndex = 1;
+                        }
+                    }
+                    closeTime = regularToMe( deneveWECloseTimes[openIndex] );
+                }
+
+                if ( currTime < openTime )
+                {
+                    $('#deneveOC').text('opens in ' + Math.floor(Math.abs(currTime - openTime)/60) + ' hr ' + Math.abs(currTime - openTime)%60 + " min" );
+                    $("#deneveOC").css( "color", "red" );
+                }
+                else if ( currTime >= openTime && currTime < closeTime )
+                {
+                    $('#deneveOC').text('closes in ' + Math.floor(Math.abs(currTime - closeTime)/60) + ' hr ' + Math.abs(currTime - closeTime)%60 + " min" );
+                    $('#deneveOC').css( "color", "green" );
+                }
+                
+                if ( currTime >= lastTime )
+                {
+                    $("#deneveOC").text('is closed for today');
+                    $("#deneveOC").css( "color", "red" );
+                }
+            }
+
+            function bplateWETimeUpdate()
+            {
+                var currTime = $("#timeSlider").val();
+                var openTime = 10000;
+                var closeTime = 10000;
+                var openIndex = -1;
+                var lastTime = regularToMe( bplateWECloseTimes[bplateWECloseTimes.length - 1] );
+
+                for ( var i = 0; i < bplateWEOpenTimes.length; i++ )
+                {
+                    if ( inRange( currTime, regularToMe( bplateWEOpenTimes[i] ), regularToMe( bplateWECloseTimes[i] )))
+                    {
+                        openTime = regularToMe( bplateWEOpenTimes[i] );
+                        closeTime = regularToMe( bplateWECloseTimes[i] );
+                        openIndex = i;
+                        break;
+                    }
+                }
+
+                if ( openIndex == -1 )
+                {
+                    for ( var i = 0; i < bplateWEOpenTimes.length; i++ )
+                    {
+                        if ( Math.abs( regularToMe( bplateWEOpenTimes[i] ) - currTime ) < Math.abs( openTime - currTime ))
+                        {
+                            openTime = regularToMe( bplateWEOpenTimes[i] );
+                            openIndex = 1;
+                        }
+                    }
+                    closeTime = regularToMe( bplateWECloseTimes[openIndex] );
+                }
+
+                if ( currTime < openTime )
+                {
+                    $('#bplateOC').text('opens in ' + Math.floor(Math.abs(currTime - openTime)/60) + ' hr ' + Math.abs(currTime - openTime)%60 + " min" );
+                    $("#bplateOC").css( "color", "red" );
+                }
+                else if ( currTime >= openTime && currTime < closeTime )
+                {
+                    $('#bplateOC').text('closes in ' + Math.floor(Math.abs(currTime - closeTime)/60) + ' hr ' + Math.abs(currTime - closeTime)%60 + " min" );
+                    $('#bplateOC').css( "color", "green" );
+                }
+                
+                if ( currTime >= lastTime )
+                {
+                    $("#bplateOC").text('is closed for today');
+                    $("#bplateOC").css( "color", "red" );
+                }
+            }
+
+            function bcafeWETimeUpdate()
+            {
+                var currTime = $("#timeSlider").val();
+                var openTime = 10000;
+                var closeTime = 10000;
+                var openIndex = -1;
+                var lastTime = regularToMe( bcafeWECloseTimes[bcafeWECloseTimes.length - 1] );
+
+                for ( var i = 0; i < bcafeWEOpenTimes.length; i++ )
+                {
+                    if ( inRange( currTime, regularToMe( bcafeWEOpenTimes[i] ), regularToMe( bcafeWECloseTimes[i] )))
+                    {
+                        openTime = regularToMe( bcafeWEOpenTimes[i] );
+                        closeTime = regularToMe( bcafeWECloseTimes[i] );
+                        openIndex = i;
+                        break;
+                    }
+                }
+
+                if ( openIndex == -1 )
+                {
+                    for ( var i = 0; i < bcafeWEOpenTimes.length; i++ )
+                    {
+                        if ( Math.abs( regularToMe( bcafeWEOpenTimes[i] ) - currTime ) < Math.abs( openTime - currTime ))
+                        {
+                            openTime = regularToMe( bcafeWEOpenTimes[i] );
+                            openIndex = 1;
+                        }
+                    }
+                    closeTime = regularToMe( bcafeWECloseTimes[openIndex] );
+                }
+
+                if ( currTime < openTime )
+                {
+                    $('#bcafeOC').text('opens in ' + Math.floor(Math.abs(currTime - openTime)/60) + ' hr ' + Math.abs(currTime - openTime)%60 + " min" );
+                    $("#bcafeOC").css( "color", "red" );
+                }
+                else if ( currTime >= openTime && currTime < closeTime )
+                {
+                    $('#bcafeOC').text('closes in ' + Math.floor(Math.abs(currTime - closeTime)/60) + ' hr ' + Math.abs(currTime - closeTime)%60 + " min" );
+                    $('#bcafeOC').css( "color", "green" );
+                }
+                
+                if ( currTime >= lastTime )
+                {
+                    $("#bcafeOC").text('is closed for today');
+                    $("#bcafeOC").css( "color", "red" );
+                }
+            }
+
+            function closedTimeUpdates()
+            {
+                $("#rendOC").text('is closed for today');
+                $("#rendOC").css( "color", "red" );
+                $("#denevegoOC").text('is closed for today');
+                $("#denevegoOC").css( "color", "red" );
+                $("#cafeOC").text('is closed for today');
+                $("#cafeOC").css( "color", "red" );
+                $("#hedrickLNOC").text('is closed for today');
+                $("#hedrickLNOC").css( "color", "red" );
+            }
+
+            function updateSwipes(week, day, plan)
+            {
+                var swipes = calculate (week, day, plan);
+                if ( !(swipes > 0) )
+                  $("#header").text("Enter Info");  
+                else
+                  $("#header").text(swipes+" Swipes");
+            }
+
+            function calculate(week, day, plan)
+            { 
+                var swipes;
+                var daynum = parseInt(day);
+                var weeknum = parseInt(week);
+                if (plan == "11")
+                
+        {            if (daynum < 5)
+                    {
+                        swipes = 13 - 2*daynum;
+                    }
+                    else
+                    {
+                        swipes = 4 - (daynum-4);
+                    }
+                }
+
+                if (plan == "14")
+                {
+                    swipes = 16 -2*daynum;
+                }
+
+                if (plan == "19")
+                {
+                    if (daynum < 6)
+                    {
+                        swipes = 22-3*daynum;
+                    }
+                    else
+                    {
+                        swipes = 2*(8-daynum);
+                    }
+                }
+
+                if (plan == "14P")
+                {
+                    var total = 14 * 12 -4 +2//10 weeks + finals + 0 week - finals weekend + current day
+                    swipes = total - 14*weeknum - 2*daynum;
+                }
+
+                if (plan == "19P")
+                {
+                    var total = 19 * 12 -4 +2 //10 weeks + finals + 0 week - finals weekend + current day
+                    if (daynum < 6)
+                    {
+                        swipes = total - 19*(weeknum) - 3*daynum;
+                    }
+                    else
+                    {
+                        swipes = total -19*(weeknum +1) + 2*(8-daynum);
+                    }
+                }
+
+                return swipes;
+            }
+
+            function getGender()
+              {
+                   return $("input[name*=radio-choice-h-2]:checked").val();
+               }
+              function updatecalories(gender, weight, weightunit, feet, inches, age, activity)
+              {
+                $("#maintaincalories").html("<h1> <font color='#084B8A'>" +maintaincal(calcBMR(gender, weight, weightunit, feet, inches, age), activity)+" Calories </font> </h1>");
+                var totalcal = maintaincal(calcBMR(gender, weight, weightunit, feet, inches,age), activity);
+                $("#losecalories").html("<h1>  <font color='#084B8A'>" +losecal(totalcal) + " </font> </h1>");
+              }
+
+              function calcBMR(gender, weight, weightunit, feet, inches, age)
+              {
+                var height = parseInt(feet)*12+parseInt(inches);
+                var weightnum;
+                if (weightunit == "kg")
+                {
+                  weightnum = parseInt(weight);
+                }
+                else if (weightunit == "lb")
+                {
+                  weightnum = parseInt(weight)/2.2046;
+                }
+                var agenum = parseInt(age);
+                var BMR;
+                if (gender == "male")
+                {
+                  BMR = 66.47+(13.75* weightnum)+(5.0*height)-(6.75*agenum);
+                }
+                if (gender == "female")
+                {
+                  BMR =665.09+(9.56*weightnum)+(1.84*height)-(4.67*agenum);
+                }
+
+                return BMR;
+                
+              }
+              function maintaincal(bmr, activity)
+              {
+                var cal;
+                if(activity == "sedentary")
+                {
+                  cal = 1.2*bmr;
+                }
+                if(activity == "lightly active")
+                {
+                  cal = 1.375*bmr;
+                }
+                if(activity == "moderately active")
+                {
+                  cal = 1.55*bmr;
+                }
+                if(activity == "very active")
+                {
+                  cal = 1.725*bmr;  
+                }
+                if(activity == "extremely active")
+                {
+                  cal = 1.9=bmr;  
+                }
+
+                return Math.round(cal);
+              }
+
+              function losecal(maincal)
+              {
+                return (Math.round(maincal-500)+" - "+Math.round(maincal-250)+" Calories");
+              }
+
+        </script>
+        <style type="text/css">
+            .ui-slider-track {
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            * { 
+                font-family: "Celeste Mobi Pro", Celeste, serif;
+            }
+        </style>
+    </head>
+    <body>
+        <div data-role="page" data-control-title="Home" id="home">
+            <div data-role="content">
+                <ul data-role="listview" class="ui-alt-icon ui-nodisc-icon">
+                    <li><a onclick="window.setTimeout(hoursInit, 10);" href="#hours">Dining Hall Hours</a></li>
+                    <li><a href="#swipes">Swipe Counter</a></li>
+                    <li><a href="#counter">Calorie Counter</a></li>
+                    <li><a href="#">Dining Menus - <span style="color:red">Coming Soon!</span></a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div data-role="page" data-control-title="Coming Soon!" id="placeholder">
+            <div data-role="content">
+                <h1>Coming Soon!</h1>
+
+            </div>
+        </div>
+
+        <div data-role="page" data-control-title="Home" id="hours">
+            <div align="center" data-role="content">
+
+                <!-- Slider -->
+                <form class="full-width-slider">
+                    <label for="timeSlider">What time would you like to see?&nbsp;&nbsp;&nbsp;
+                        <a id="nowButton" data-mini="true" onclick="changeString(unixToMe( $.now()));$('#timeSlider').val( unixToMe( $.now())).slider('refresh');" data-inline="true" data-role="button">Now</a></label>
+                    <p><b id="timeOut">12:00</b></p>
+                    <input type="range" name="slider-12" id="timeSlider" min="0" max="1140" value="0">
+                </form>
+                <hr style="height:3px; background-color:#ccc; border:5px; margin-top:5px; margin-bottom:0px;">
+
+                <!-- Locations -->
+                <form>
+                    <ul data-role="listview" data-inset="true">
+                        <li class="divi" data-role="list-divider">
+                            Dining Halls
+                        </li>
+                        <li class="ui-field-contain">
+                            <b>Covel</b> <span id="covelOC">opens in 15 minutes</span>
+                        </li>
+                        <li class="ui-field-contain">
+                            <b>Hedrick</b> <span id="deneveOC">opens</span>
+                        </li>
+                        <li class="ui-field-contain">
+                            <b>FEAST</b> <span id="feastOC">opens</span>
+                        </li>
+                        <li class="ui-field-contain">
+                            <b>Bruin Plate</b> <span id="bplateOC">opens</span>
+                        </li>
+                    </ul>
+                </form>
+                <form>
+                    <ul data-role="listview" data-inset="true">
+                        <li class="divi" data-role="list-divider">
+                            Quick-Service Cafes
+                        </li>
+                        <li class="ui-field-contain">
+                            <b>Bruin Cafe</b> <span id="bcafeOC">opens</span>
+                        </li>
+                        <li class="ui-field-contain">
+                            <b>Rendezvous</b> <span id="rendOC">opens</span>
+                        </li>
+                        <li class="ui-field-contain">
+                            <b>Cafe 1919</b> <span id="cafeOC">opens</span>
+                        </li>
+                        <li class="ui-field-contain">
+                            <b>De Neve-Go</b> <span id="denevegoOC">opens</span>
+                        </li>
+                    </ul>
+                </form>
+                <form>
+                    <ul data-role="listview" data-inset="true">
+                        <li class="divi" data-role="list-divider">
+                            Late Night
+                        </li>
+                        <li class="ui-field-contain">
+                            <b>Hedrick</b> <span id="dNeveLNOC">opens</span>
+                        </li>
+                    </ul>
+                </form>
+            <input type=button value="Back" onClick="history.go(-1)">
+            </div>
+        </div>
+
+        <div data-role="page" data-control-title="Swipes" id="swipes">
+          <div data-role="content">
+              <h1 id="header" align="center">
+                  Enter Info
+              </h1>
+              <div align="center" data-role="fieldcontain" data-controltype="radiobuttons">
+                  <fieldset onchange ="updateSwipes($('#selectmenu3').val(), $('#selectmenu4').val(), $('input:checked').val())" id="radiobuttons" data-role="controlgroup" data-type="horizontal" data-mini="true">
+                      <legend>
+                          Choose:
+                      </legend>
+                      <input id="radio1" name="" value="11" type="radio">
+                      <label for="radio1">
+                          11
+                      </label>
+                      <input id="radio2" name="" value="14" type="radio">
+                      <label for="radio2">
+                          14
+                      </label>
+                      <input id="radio3" name="" value="19" type="radio">
+                      <label for="radio3">
+                          19
+                      </label>
+                      <input id="radio5" name="" value="14P" type="radio">
+                      <label for="radio5">
+                          14P
+                      </label>
+                      <input id="radio4" name="" value="19P" type="radio">
+                      <label for="radio4">
+                          19P
+                      </label>
+                  </fieldset>
+              </div>
+              <div align="center" data-role="fieldcontain" data-controltype="selectmenu">
+                  <label for="selectmenu3">
+                      Choose Week:
+                  </label>
+                  <select onchange = "updateSwipes($('#selectmenu3').val(), $('#selectmenu4').val(), $('input:checked').val())" id="selectmenu3" name="" data-mini="true">
+                      <option value="0">
+                          Week 0
+                      </option>
+                      <option value="1">
+                          Week 1
+                      </option>
+                      <option value="2">
+                          Week 2
+                      </option>
+                      <option value="3">
+                          Week 3
+                      </option>
+                      <option value="4">
+                          Week 4
+                      </option>
+                      <option value="5">
+                          Week 5
+                      </option>
+                      <option value="6">
+                          Week 6
+                      </option>
+                      <option value="7">
+                          Week 7
+                      </option>
+                      <option value="8">
+                          Week 8
+                      </option>
+                      <option value="9">
+                          Week 9
+                      </option>
+                      <option value="10">
+                          Week 10
+                      </option>
+                  </select>
+                  <br />&nbsp;
+                  <label for="selectmenu4">
+                      Choose Day:
+                  </label>
+                  <select onchange = "updateSwipes($('#selectmenu3').val(), $('#selectmenu4').val(), $('input:checked').val())" id="selectmenu4" name="" data-mini="true">
+                      <option value="1">
+                          Monday
+                      </option>
+                      <option value="2">
+                          Tuesday
+                      </option>
+                      <option value="3">
+                          Wednesday
+                      </option>
+                      <option value="4">
+                          Thursday
+                      </option>
+                      <option value="5">
+                          Friday
+                      </option>
+                      <option value="6">
+                          Saturday
+                      </option>
+                      <option value="7">
+                          Sunday
+                      </option>
+                  </select>
+              </div>
+          <input type=button value="Back" onClick="history.go(-1)">
+          </div>
+      </div>
+
+      <div data-role="page" data-control-title="Home" id="counter">
+      <div data-role="content">
+            <form>
+                <fieldset id="genderChoice" data-role="controlgroup" data-type="horizontal" align="center" style="margin-bottom:0px">
+                    <input type="radio" name="radio-choice-h-2" id="radio-choice-h-2a" value="male" checked="checked">
+                    <label for="radio-choice-h-2a">Male</label>
+                    <input type="radio" name="radio-choice-h-2" id="radio-choice-h-2b" value="female">
+                    <label for="radio-choice-h-2b">Female</label>
+                </fieldset>
+            </form>
+          <div class="ui-grid-a">
+              <div class="ui-block-a">
+                  <div data-role="fieldcontain" data-controltype="textinput">
+                      <input name="" id="weight" placeholder="Enter Weight..." value=""
+                      type="text" data-mini="true">
+                  </div>
+              </div>
+              <div class="ui-block-b">
+                  <div data-role="fieldcontain" data-controltype="selectmenu">
+                      <select id="weightunit" name="" data-mini="true">
+                          <option value="lb">
+                              Lb
+                          </option>
+                          <option value="kg">
+                              Kg
+                          </option>
+                      </select>
+                  </div>
+              </div>
+          </div>
+          <div data-role="fieldcontain" data-controltype="textinput">
+              <input name="" id="age" placeholder="Enter Age..." value="" type="text"
+              data-mini="true">
+          </div>
+          <div data-controltype="textblock">
+              <p>
+                  <b>
+                      Enter Height:
+                  </b>
+              </p>
+          </div>
+          <div class="ui-grid-a">
+              <div class="ui-block-a">
+                  <div data-role="fieldcontain" data-controltype="textinput">
+                      <input name="" id="feet" placeholder="Feet" value="" type="text"
+                      data-mini="true">
+                  </div>
+              </div>
+              <div class="ui-block-b">
+                  <div data-role="fieldcontain" data-controltype="textinput">
+                      <input name="" id="inches" placeholder="Inches" value="" type="text"
+                      data-mini="true">
+                  </div>
+              </div>
+          </div>
+          <div data-controltype="textblock">
+              <p>
+                  <b>
+                      Level of Exercise:
+                  </b>
+              </p>
+          </div>
+          <div data-role="fieldcontain" data-controltype="selectmenu">
+              <select id="activitymenu" name="" data-mini="true">
+                  <option value="sedentary">
+                      Sedentary
+                  </option>
+                  <option value="lightly active">
+                      Lightly Active
+                  </option>
+                  <option value="moderately active">
+                      Moderately active
+                  </option>
+                  <option value="very active">
+                      Very Active
+                  </option>
+                  <option value="extremely active">
+                      Extremely Active
+                  </option>
+              </select>
+          </div>
+          <a onclick ="updatecalories(getGender(), $('#weight').val(), $('#weightunit').val(), $('#feet').val(), $('#inches').val(), $('#age').val(), $('#activitymenu').val())" data-role="button" data-transition="flip" href="#page3">
+              Submit
+          </a>
+
+        <input type=button value="Back" onClick="history.go(-1)">
+      </div>
+  </div>
+  <div data-role="page" data-control-title="Calculations" id="page3">
+      <div data-role="content">
+          <div align="center" data-controltype="textblock">
+              <h1>
+                  <b>
+                      You should consume:
+                  </b>
+              </h1>
+          </div>
+          <div align="center" id ="maintaincalories"data-controltype="textblock">
+              <h1>
+                  <b>
+                    <font color="#084B8A">
+                      2000 Calories
+                    </font>
+                      <span id="_mce_caret" data-mce-bogus="1" style="">
+                          <span style="font-size: xx-large;" data-mce-bogus="1">
+                              ﻿
+                          </span>
+                      </span>
+                  </b>
+              </h1>
+          </div>
+          <div align="center" data-controltype="textblock">
+              <h1>
+                  <b>
+                      to maintain your current weight
+                  </b>
+              </h1>
+          </div>
+          <hr style="height:3px; background-color:#ccc; border:0; margin-top:12px; margin-bottom:12px;">
+          <div align="center" data-controltype="textblock">
+              <h1>
+                  <b>
+                      You should consume
+                  </b>
+              </h1>
+          </div>
+          <div align="center" id="losecalories"data-controltype="textblock">
+              <p>
+                  <h1>
+                    <font color="#084B8A">
+                     1500-1750 Calories
+                     </font>
+                      <span style="font-size: xx-large;" data-mce-style="font-size: xx-large;">
+                          ﻿
+                      </span>
+                  </h1>
+              </p>
+          </div>
+          <div align="center" data-controltype="textblock">
+              <p>
+                  <h1>
+                      to lose about 1 lb a week
+                  </h1>
+              </p>
+          </div>
+      <input type=button value="Back" onClick="history.go(-1)">
+      </div>
+  </div>
+    </body>
+</html>

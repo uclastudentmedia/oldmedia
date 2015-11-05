@@ -1,0 +1,73 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Register New User</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/js/client/2.0.2/firebase.js'></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+        <style type="text/css">
+            /* CSS */ 
+        </style>
+    </head>
+    <body>
+        <script type='text/javascript'>
+            var myDataRef = new Firebase("https://eventsinla.firebaseio.com/");
+
+            function submitUser()
+            {
+                if( $("#first").val() == "" || $("#last").val() == "" || $("#emailReg").val() == "" || $("#passwordReg").val() == "" )
+                {
+                    alert("Please fill out the necessary information!");
+                    return;
+                }
+
+                if( $("#passwordReg").val() != $("#password2Reg").val() )
+                {
+                    alert("Passwords do not match! Please re-enter your password");
+                    return
+                }
+
+                myDataRef.createUser({
+                    email    : $("#emailReg").val(),
+                    password : $("#passwordReg").val()  
+                }, function(error) {
+                    if (error === null) {
+                        var key = $("#emailReg").val().replace(/[^\w\s]/gi, '');
+                        alert("User created successfully!");
+                        myDataRef.child("Users").child( key ).set({ name: $("#first").val() + " " + $("#last").val().trim().toUpperCase().charAt(0), email: $("#emailReg").val(), password: $("#passwordReg").val(), status: "Active" });
+                        window.location.href = "..";
+                    } else {
+                        alert("Error creating user: " + error);
+                    }
+                });
+            } 
+        </script>
+        <div data-role="content">
+            <h1>Register New User</h1>
+            <div class="ui-grid-a">
+                <div class="ui-block-a">
+                    <label for="first">First Name</label>
+                    <input type="text" id="first" value="">
+                </div>
+                <div class="ui-block-b">
+                    <label for="last">Last Name</label>
+                    <input type="text" id="last" value="">
+                </div>
+            </div>
+            <label for="emailReg">Email</label>
+            <input type="text" id="emailReg" value="">
+            <label for="passwordReg">Password</label>
+            <input type="password" id="passwordReg" value="">
+            <label for="password2Reg">Re-enter Password</label>
+            <input type="password" id="password2Reg" value="">
+            <br />
+            <button type="button" class="ui-btn" onclick="submitUser();">Register</button>
+        </div>
+    </body>
+</html>

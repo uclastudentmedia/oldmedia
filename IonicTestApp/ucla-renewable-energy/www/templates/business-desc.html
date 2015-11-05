@@ -1,0 +1,10 @@
+<ion-modal-view>
+	<ion-header-bar class="bar bar-header bar-custom" on-drag-down="modal.hide()">
+		<h1 class="title">{{entity.entity.name}}</h1>
+		<button class="button button-clear button-primary" ng-click="modal.hide()">Close</button>
+	</ion-header-bar>
+	<ion-content class="has-header padding">
+		<div ng-bind-html="entity.description_html">
+		</div>
+	</ion-content>
+</ion-modal-view>

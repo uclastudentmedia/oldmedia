@@ -1,0 +1,21 @@
+<ion-view view-title="Football Feed">
+	<ion-content class="has-header">
+		<div class="list card" ng-repeat="card in rssCards">
+			<div class="item item-divider">
+				{{card.source}} | <span style="color:#A0A0A0">{{formatDate(card.publishedDate)}}</span>
+			</div>
+			<div class="item item-text-wrap">
+				<p>{{card.title}}</p>
+			</div>
+			<div class="item item-icon-right balanced" ng-click="openURL(card.link)">
+				Read More...
+				<i class="icon ion-chevron-right"></i>
+			</div>
+		</div>
+		<div style="padding:2em">
+			<button class="button button-block button-balanced" ng-click="loadMore()">
+				Load More
+			</button>
+		</div>
+	</ion-content>
+</ion-view>

@@ -1,0 +1,38 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Title</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>
+        <script src='https://cdn.firebase.com/js/simple-login/1.6.0/firebase-simple-login.js'></script>
+        <style type="text/css">
+            /* CSS */ 
+        </style>
+        <script>
+            var chatRef = new Firebase('https://ascendatucla.firebaseio.com');
+            var auth = new FirebaseSimpleLogin(chatRef, function(error, user) {
+              if (error) {
+                // an error occurred while attempting login
+                console.log(error);
+              } else if (user) {
+                // user authenticated with Firebase
+                console.log('User ID: ' + user.uid + ', Provider: ' + user.provider);
+              } else {
+                // user is logged out
+              }
+            });
+        </script>
+    </head>
+    <body>
+        <div data-role="content">
+            <button onclick="auth.login('google');" class="ui-btn">Button</button>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,267 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Eventbook</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/js/client/2.0.2/firebase.js'></script>
+        <script src="js/eventCards.js"></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+        <style type="text/css">
+            /* CSS */ 
+        </style>
+        <script type="text/javascript">
+            var myDataRef = new Firebase("https://eventsinla.firebaseio.com/");
+            var loginInfo;
+            var cards = new Array();
+            var attendIDs = new Array();
+            var likeIDs = new Array();
+
+            // Login System
+            $(document).ready( function() {
+                if( document.cookie.length != 0 )
+                {
+                    login( getCookie("email"), getCookie("password") );
+                } 
+                myDataRef.child("Events").once( 'value', function( dataSnapshot ) {
+                    var counter = 0;
+                    dataSnapshot.forEach( function( childSnapshot ) {
+
+                        var child = childSnapshot.val();
+
+                        var now = new Date();
+                        var thisDate = new Date( child.date );
+                        thisDate.setDate( thisDate.getDate() + 1 );
+
+                        if( now.getTime() > thisDate.getTime() )
+                        {
+                            myDataRef.child("Events").child( childSnapshot.key() ).remove();
+                        }
+                        else
+                        {
+                            var gen = new Array();
+                            for( var i in child.type )
+                            {
+                                gen.push( child.type[i] );
+                            }
+
+                            var attendees = new Array();
+                            for( var j in child.attendees )
+                            {
+                                attendees.push( child.attendees[j] );
+                            }
+
+                            var a = new Card( child.name, child.cat, gen, child.loc, child.date, child.sTime, child.eTime, child.price, child.likes, attendees, counter, childSnapshot.key() );
+                            cards.push( a );
+                            counter++;
+                        }
+                    });
+
+                    $("#eventCards").trigger('create');
+                }); 
+            });
+
+            function login( email, password )
+            {
+                myDataRef.authWithPassword({
+                    email    : email,
+                    password : password
+                    }, 
+                    function(error, authData) {
+                        if (error === null) {
+                            var key = email.replace(/[^\w\s]/gi, '');
+
+                            myDataRef.child("Users").child( key ).once( 'value', function( dataSnapshot ) {
+                                loginInfo = dataSnapshot.val();
+
+                                setCookie("name", loginInfo.name, 3);
+                                setCookie("email", loginInfo.email, 3);
+                                setCookie("password", loginInfo.password, 3);
+                                setCookie("userid", key, 3);
+
+                                for( var i in loginInfo.attending )
+                                {
+                                    attendIDs.push( loginInfo.attending[i] );
+                                }
+
+                                for( var j in loginInfo.likes )
+                                {
+                                    likeIDs.push( loginInfo.likes[j] );
+                                }
+
+                                $("#name").text( loginInfo.name );
+                                window.location.href = "#home"; 
+                            });
+                        }
+                        else
+                        {
+                            alert("Incorrect username or password!");
+                        }
+                    }
+                );
+            }
+
+            function logout() {
+                setCookie("name", "", -1);
+                setCookie("email", "", -1);
+                setCookie("password", "", -1);
+                setCookie("userid", "", -1);
+
+                window.location.href = "#login";
+                window.location.reload();
+            }
+
+            // Event Work
+            function modEventPage( index )
+            {
+                cards[index].genPage();
+            }
+
+            // Imported Code
+            function setCookie(cname, cvalue, exdays) {
+                var d = new Date();
+                d.setTime(d.getTime() + (exdays*24*60*60*1000));
+                var expires = "expires="+d.toUTCString();
+                document.cookie = cname + "=" + cvalue + "; " + expires;
+            }
+
+            function getCookie(cname) {
+                var name = cname + "=";
+                var ca = document.cookie.split(';');
+                for(var i=0; i<ca.length; i++) {
+                    var c = ca[i];
+                    while (c.charAt(0)==' ') c = c.substring(1);
+                    if (c.indexOf(name) != -1) return c.substring(name.length,c.length);
+                }
+                return "";
+            }
+
+            var genres = [ ["Alternative", "Jazz/Blues", "Country", "EDM", "Hip-Hop/Rap", "Pop", "Rock", "Latino", "On-Campus" ], ["Standup", "Sketch", "Improv", "On-Campus"], ["Comedy", "Drama", "Musical", "On-Campus"], ["Exhibition", "Gallery", "On-Campus"] ];
+
+            function popBoxes( index )
+            {
+                $("#cboxes").empty();
+                if( index == -1 )
+                    return;
+                var boxString = "<div data-role='controlgroup' id='group'>";
+                for( var i = 0; i < genres[index].length; i++ )
+                {
+                    boxString += '<input type="checkbox" name="cat" id="cat' + i + '" value="' + genres[index][i] + '"><label for="cat' + i + '">' + genres[index][i] + '</label>';
+                }
+                boxString += "</div>";
+                $("#cboxes").append( boxString );
+                $("#cboxDiv").trigger('create');
+            }
+        </script>
+    </head>
+    <body>
+        <div data-role="page" data-control-title="login" id="login">
+            <div data-role="main" class="ui-content">
+                <h1>Please login below!</h1>
+                <label for="email">Email</label>
+                <input type="text" id="email">
+                <label for="password">Password</label>
+                <input type="password" id="password">
+                <div class="ui-grid-a">
+                    <div class="ui-block-a">
+                        <a class="ui-btn" href="requestRegister">Register</a>
+                    </div>
+                    <div class="ui-block-b">
+                        <button class="ui-btn" id="login" onclick="login( $('#email').val(), $('#password').val());">Login</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Home Page -->
+        <div data-role="page" data-control-title="Home" id="home">
+            <div data-role="main" class="ui-content">
+                <h3 align="right">Welcome <span id="name"></span>.</h3>
+                <div class="ui-grid-a">
+                    <div class="ui-block-a">
+                        <a href="#options" class="ui-btn">Options</a>
+                    </div>
+                    <div class="ui-block-b">
+                        <button class="ui-btn" onclick="logout()">Logout</button>
+                    </div>
+                </div>
+                <hr />
+                <div id="eventCards">
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Options Page -->
+        <div data-role="page" data-control-title="Options" id="options">
+            <div data-role="main" class="ui-content">
+                <!-- If you get this reference, you're amazing -->
+                <label for="captain">Select Price Range</label>
+                <select id="captain">
+                    <option value="-1">Select One</option>
+                    <option disabled>-----------------</option>
+                    <option value="Free">Free</option>
+                    <option value="$0 - $20">$0 - $20</option>
+                    <option value="$20 - $50">$20 - $50</option>
+                    <option value="$50+">$50+</option>
+                </select>
+                <label for="cat">Select Category</label>
+                <select id="cat" onchange="popBoxes( parseInt( $('#cat').val() ));">
+                    <option value="-1">Select One</option>
+                    <option disabled>-----------------</option>
+                    <option value="0">Concert</option>
+                    <option value="1">Comedy</option>
+                    <option value="2">Theater</option>
+                    <option value="3">Art</option>
+                </select>
+                <div id="cboxDiv">
+                    <form>
+                        <fieldset data-role="controlgroup" id="cboxes">
+                        </fieldset>
+                    </form>
+                </div>
+                <hr />
+                <a href="#home" class="ui-btn">Back</a>
+            </div>
+        </div>
+
+        <!-- Event Page -->
+        <div data-role="page" data-control-title="Event" id="event">
+            <div data-role="main" class="ui-content">
+                <h2 class="ui-bar ui-bar-a" id="nameE">Event Name</h2>
+                <div class="ui-grid-a">
+                    <div class="ui-block-a">
+                        <button data-icon="heart" id="likeButton" class="ui-btn ui-btn-icon-left">Like</button>
+                    </div>
+                    <div class="ui-block-b">
+                        <button data-icon="check" id="attendButton" class="ui-btn ui-btn-icon-left">Attending</button>
+                    </div>
+                </div>
+                <hr />
+                <div class="ui-body ui-body-a">
+                    <p><b>Likes: </b><span id="likesE"></span></p>
+                    <p><b>Attending: </b></p>
+                    <ul id="attendeesE">
+                    </ul>
+                </div>
+                <br />
+                <div class="ui-body ui-body-a">
+                    <p><b>Date: </b><span id="dateE"></span></p>
+                    <p><b>Start Time: </b><span id="startE"></span></p>
+                    <p><b>End Time: </b><span id="endE"></span></p>
+                    <p><b>Location: </b><span id="locE"></span></p>
+                    <p><b>Price: </b><span id="priceE"></span></p>
+                    <p><b>Category: </b><span id="catE"></span></p>
+                    <p><B>Genres: </B><span id="genresE"></span></p>
+                </div>                
+                <br />
+                <a class="ui-btn" href="#home">Back</a>
+            </div>
+        </div>
+    </body>
+</html>

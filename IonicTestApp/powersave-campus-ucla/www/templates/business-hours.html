@@ -1,0 +1,10 @@
+<ion-modal-view>
+	<ion-header-bar class="bar bar-header bar-custom" on-drag-down="hours.hide()">
+		<h1 class="title">{{entity.entity.name}}</h1>
+		<button class="button button-clear button-primary" ng-click="hours.hide()">Close</button>
+	</ion-header-bar>
+	<ion-content class="has-header padding">
+		<div class="hours-detail" ng-bind-html="entity.business_hours_html">
+		</div>
+	</ion-content>
+</ion-modal-view>

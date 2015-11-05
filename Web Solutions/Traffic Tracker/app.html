@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="themes/colors.css" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>Traffic Tracker</title>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.css" />
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="http://malsup.github.io/jquery.blockUI.js"></script>
+    <script src="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.js"></script>
+    <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+    <script src="my.js"></script>
+    <style>
+        #footerTabs {
+            background: #FFF -webkit-radial-gradient(circle, #FFF, #dee2e4);
+        }
+        .ui-listview sup {
+            font-size: 0.6em;
+            color: #cc0000;
+        }
+        body {
+            background-color: grey;
+        }
+        a.inv {
+            visibility: hidden;
+        }
+        .ui-focus {
+            -moz-box-shadow: none !important;
+            -webkit-box-shadow: none !important;
+            box-shadow: none !important;
+        }
+    </style>
+    <script>
+        function submitResponse(e, t) {
+            var n = [t, $.now(), 0];
+            myDataRef.child(keyDictionary[e]).child("submissions").push(n);
+            updatePage(e);
+            alert("Your feedback has been recorded!")
+        }
+
+        function removeOld(e, t) {
+            var n = myDataRef.child(keyDictionary[e]).child("submissions");
+            for (var r = 0; r < t.length; r++) {
+                n.child(t[r]).remove()
+            }
+        }
+
+        function findKeysToRemove(e) {
+            var t = new Array;
+            $.each(e, function (e, n) {
+                var r = parseInt($.now()) - parseInt(n[1]);
+                if (r > 36e5) {
+                    t.push(e)
+                }
+            });
+            return t
+        }
+
+        function returnCompletePhrase(e)
+        {
+            return e + " - " + returnPhrase(e);
+        }
+
+        function returnPhrase(e)
+        {
+            if ( e >= 1 && e < 1.2 )
+                return "Completely empty";
+            else if ( e >= 1.2 && e < 1.67 )
+                return "Almost empty";
+            else if ( e >= 1.67 && e < 2 )
+                return "Quarter full";
+            else if ( e >= 2 && e < 2.33 )
+                return "Lots of space";
+            else if ( e >= 2.33 && e < 2.67 )
+                return "Less than half full";
+            else if ( e >= 2.67 && e < 3.33 )
+                return "Half full";
+            else if ( e >= 3.33 && e < 3.67 )
+                return "More than half full";
+            else if ( e >= 3.67 && e < 4 )
+                return "Crowded but manageable";
+            else if ( e >= 4 && e < 4.33 )
+                return "Crowded";
+            else if ( e >= 4.33 && e < 4.8 )
+                return "Almost full";
+            else if ( e >= 4.8 && e <= 5 )
+                return "Completely full";
+        }
+
+        function colorScale(e) {
+            var t = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"];
+            if (e == 0) {
+                return "#AAA";
+            }
+            var n = Math.round((e - 1) / .129);
+            var r = "";
+            if (n == 16) {
+                r = "#FF0"
+            } else if (n < 16) {
+                var i = "#F";
+                i += t[n] + "0";
+                r = i
+            } else if (n > 16) {
+                var s = "#";
+                s += t[31 - n] + "F0";
+                r = s
+            }
+            return r;
+        }
+
+        function setColor(e, t) {
+            var n = e.replace(/\s+/g, "");
+            $("#" + n).css("border-left", "5px solid " + colorScale(t));
+            $("#butScale" + nameArray.indexOf(e)).css("background", colorScale(t));
+            $("#" + n).parent().listview("refresh");
+            document.location.href = "#"
+        }
+
+        function parseTimeDifference(e) {
+            var t = parseInt($.now()) - parseInt(e);
+            if (t < 5e3) {
+                return "just now"
+            } else if (t >= 5e3 && t < 6e4) {
+                return Math.round(t / 1e3) + " seconds ago"
+            } else if (t >= 6e4 && t < 36e5) {
+                return Math.round(t / 6e4) + " minutes ago"
+            } else if (t >= 36e5 && t < 864e5) {
+                return Math.round(t / 36e5) + " hours ago"
+            } else if (t >= 864e5 && t < 6048e5) {
+                return Math.round(t / 864e5) + " days ago"
+            } else {
+                return "a long time ago"
+            }
+        }
+
+        function findLastKey(e) {
+            var t = 0;
+            var n = "";
+            $.each(e, function (e, r) {
+                if (r[1] > t) {
+                    t = r[1];
+                    n = e
+                }
+            });
+            return n
+        }
+
+        function showHideCategory(e, t) {
+            $("#" + t).prop("checked") == true ? $("#" + e).show() : $("#" + e).hide()
+        }
+
+        function updatePage(e) {
+            $("#timeTag" + nameArray.indexOf(e)).html(parseTimeDifference(oldestTimesArray[nameArray.indexOf(e)]))
+        }
+
+        function populatePages() {
+            for (var e = 0; e < nameArray.length; e++) {
+                document.write('<div data-theme="f" data-role="page" id="fp' + e + '">');
+                document.write('<div data-role="content" style="padding-top:0px">');
+                document.write("<p style='margin-top:15px'>How busy is <b>" + nameArray[e] + "</b>?</p>");
+                document.write('<a id="butScale' + e + '" data-role="button" class="ui-btn-plain" href="#" value="' + e + '">');
+                document.write("0");
+                document.write("</a><div>");
+                document.write('<div data-role="fieldcontain">');
+                document.write('<label for="bbar' + e + '">How busy is it? (1=Empty, 5=Full)</label>');
+                document.write('<input id="bbar' + e + '" type="range" name="slider" value="3" min="1" max="5" data-highlight="false"></div>');
+                document.write('<button type="button" id="sub" onclick="submitResponse(&#39;' + nameArray[e] + '&#39;,6-$(&#39;' + '#bbar' + e + '&#39;).val())">Submit!</button>');
+                document.write("<p>");
+                document.write('Last updated: <b id="timeTag' + e + '">never</b>');
+                document.write("</p><p>");
+                document.write('Most recent post: <b id="ratingTag' + e + '">3</b>');
+                document.write("</p></div>");
+                document.write('<a id="backF" data-role="button" class="ui-btn-plain" VALUE="Back" onClick="history.go(-1);return true;" href="#">Back</a>');
+                document.write("</div>");
+                document.write("</div>")
+            }
+        }
+
+        function debugFunction(e) {
+            myDataRef.child("loc3/submissions").on("value", function (e) {
+                var t = e.val();
+                for (var n in t) {
+                    alert(t[n])
+                }
+            })
+        }
+
+        function returnSize(e) {
+            var t = 0,
+                n;
+            for (n in e) {
+                if (e.hasOwnProperty(n)) t++
+            }
+            return t
+        }
+
+        function writeEntry(e, t) {
+            var n = {
+                name: e,
+                submissions: {
+                    0: [3, $.now(), 1]
+                },
+                type: t
+            };
+            myDataRef.push(n)
+        }
+        var nameArray = ["Powell Library", "Young Research Library", "Biomedical Research Library", "Law Library", "Management Library", "Boelter Science and Engineering", "Geology Science and Engineering", "Music Library", "East Asian Library", "Arts Library", "De Neve", "FEAST at Rieber", "Covel", "Bruin Plate", "Bruin Cafe", "Late Night"];
+        var myDataRef = new Firebase("https://uclastudentmedia.firebaseio.com/trafficTracker");
+        var oldestTimesArray = [0, 0, 0, 0];
+        var keyDictionary = new Object;
+        $(document).ready(function () {
+            if( window.location.hash != "#loaded" )
+            {
+                window.location = '#loaded';
+                window.location.reload();
+            }
+            $.blockUI({
+                message: null
+            });
+            myDataRef.once("value", function (e) {
+                var t = e.val();
+                for (var n in t) {
+                    keyDictionary[t[n]["name"]] = n;
+                    var r = 0;
+                    for (var i in t[n]["submissions"]) {
+                        r += parseInt(t[n]["submissions"][i][0])
+                    }
+                    var s = r / returnSize(t[n]["submissions"]);
+                    setColor(t[n]["name"], s);
+                    $("#butScale" + nameArray.indexOf(t[n]["name"])).button().children().children().html(returnCompletePhrase((6 - s.toFixed(2)).toFixed(2)));
+                    $("#ratingTag" + nameArray.indexOf(t[n]["name"])).html(6 - t[n]["submissions"][findLastKey(t[n]["submissions"])][0]);
+                    oldestTimesArray[nameArray.indexOf(t[n]["name"])] = t[n]["submissions"][findLastKey(t[n]["submissions"])][1]
+                }
+                $("#overlay").fadeOut();
+                $.unblockUI()
+            });
+            myDataRef.on("child_changed", function (e, t) {
+                var n = e.val();
+                var r = 0;
+                for (var i in n["submissions"]) {
+                    r += parseInt(n["submissions"][i][0])
+                }
+                r /= returnSize(n["submissions"]);
+                removeOld( n['name'], findKeysToRemove(n['submissions']));
+                window.location.reload();
+                setColor(n["name"], r);
+                $("#butScale" + nameArray.indexOf(n["name"])).children().children().html(returnCompletePhrase((6 - r.toFixed(2)).toFixed(2)));
+                $("#ratingTag" + nameArray.indexOf(n["name"])).html(6 - n["submissions"][findLastKey(n["submissions"])][0]);
+                oldestTimesArray[nameArray.indexOf(n["name"])] = n["submissions"][findLastKey(n["submissions"])][1]
+            })
+        });
+    </script>
+</head>
+
+<body>
+    <div data-theme="f" data-role="page" id="page1">
+        <div data-role="content">
+            <form>
+                <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+                    <legend>Categories:</legend>
+                    <input type="checkbox" name="library-check" id="library-check" checked="checked" onchange="showHideCategory('libraries', 'library-check')">
+                    <label for="library-check">Libraries</label>
+                    <input type="checkbox" name="dininghall-check" id="dininghall-check" checked="checked" onchange="showHideCategory('dininghalls', 'dininghall-check')">
+                    <label for="dininghall-check">Dining Halls</label>
+                </fieldset>
+            </form>
+            <ul id="libraries" data-role="listview" data-divider-theme="f" data-inset="true">
+                <li data-role="list-divider">Libraries</li>
+                <li id="PowellLibrary" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp0" data-transition="slide" onclick="updatePage( 'Powell Library' )" value="0">Powell Library</a>
+                </li>
+                <li id="YoungResearchLibrary" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp1" data-transition="slide" onclick="updatePage( 'Young Research Library' )" value="1">Young Research Library</a>
+                </li>
+                <li id="BiomedicalResearchLibrary" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp2" data-transition="slide" onclick="updatePage( 'Biomedical Research Library' )" value="2">Biomedical Research Library</a>
+                </li>
+                <li id="LawLibrary" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp3" data-transition="slide" onclick="updatePage( 'Law Library' )" value="3">Darling Law Library</a>
+                </li>
+                <li id="ManagementLibrary" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp4" data-transition="slide" onclick="updatePage( 'Management Library' )" value="4">Rosenfeld Management Library</a>
+                </li>
+                <li id="BoelterScienceandEngineering" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp5" data-transition="slide" onclick="updatePage( 'Boelter Science and Engineering' )" value="5">Boelter Science and Engineering Library</a>
+                </li>
+                <li id="GeologyScienceandEngineering" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp6" data-transition="slide" onclick="updatePage( 'Geology Science and Engineering' )" value="6">Geology Science and Engineering Library</a>
+                </li>
+                <li id="MusicLibrary" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp7" data-transition="slide" onclick="updatePage( 'Music Library' )" value="7">Schoenberg Music Library</a>
+                </li>
+                <li id="EastAsianLibrary" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp8" data-transition="slide" onclick="updatePage( 'East Asian Library' )" value="8">Rudolph East Asian Library</a>
+                </li>
+                <li id="ArtsLibrary" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp9" data-transition="slide" onclick="updatePage( 'Arts Library' )" value="9">Arts Library</a>
+                </li>
+            </ul>
+            <ul id="dininghalls" data-role="listview" data-divider-theme="f" data-inset="true">
+                <li data-role="list-divider">Dining Halls</li>
+                <li id="DeNeve" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp10" data-transition="slide" onclick="updatePage( 'De Neve' )" value="10">De Neve</a>
+                </li>
+                <li id="FEASTatRieber" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp11" data-transition="slide" onclick="updatePage( 'FEAST at Rieber' )" value="11">FEAST at Rieber</a>
+                </li>
+                <li id="Covel" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp12" data-transition="slide" onclick="updatePage( 'Covel' )" value="12">Covel</a>
+                </li>
+                <li id="BruinPlate" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp13" data-transition="slide" onclick="updatePage( 'Bruin Plate' )" value="13">Bruin Plate</a>
+                </li>
+                <li id="BruinCafe" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp14" data-transition="slide" onclick="updatePage( 'Bruin Cafe' )" value="14">Bruin Café</a>
+                </li>
+                <li id="LateNight" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false"><a href="#fp15" data-transition="slide" onclick="updatePage( 'Late Night' )" value="15">De Neve Late Night</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <script type="text/javascript" language="JavaScript">
+        populatePages();
+    </script>
+</body>
+
+</html>

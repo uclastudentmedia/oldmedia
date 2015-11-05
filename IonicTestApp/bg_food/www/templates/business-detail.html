@@ -1,0 +1,25 @@
+<ion-view>
+    <ion-nav-title ng-bind="entity.entity.name"></ion-nav-title>
+	<ion-content class="has-header">
+		<ion-item ng-href="#/app/{{channel}}/{{entityID}}/{{slug}}/images" ng-if="valid(previewImage)">
+			<div ng-style="imageClass"></div>
+		</ion-item>
+		<ion-item ng-click="modal.show()" class="item item-icon-right" ng-if="valid(entity.description_label)">
+			<!-- Make this a link to the description page -->
+			<h2>{{entity.description_label}}</h2>
+			<i class="icon ion-ios-arrow-right"></i>
+		</ion-item>
+		<ion-item ng-click="openURL(entity.business_url)" ng-if="valid(entity.business_url)">
+			<h2>Website</h2>
+		</ion-item>
+		<ion-item ng-click="hours.show()" ng-if="valid(entity.hours_status)">
+			Hours: <span class="item-note">{{entity.hours_status}}</span>
+		</ion-item>
+		<ion-item ng-if="valid(entity.contact_phone)">
+			Phone: <span class="item-note">{{entity.contact_phone}}</span>
+		</ion-item>
+		<ion-item ng-if="valid(entity.locations[0].address_line_1)">
+			Address: <span class="item-note">{{entity.locations[0].address_line_1}}</span>
+		</ion-item>
+	</ion-content>
+</ion-view>

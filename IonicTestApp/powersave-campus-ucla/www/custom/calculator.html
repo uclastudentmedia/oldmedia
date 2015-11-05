@@ -1,0 +1,86 @@
+<ion-view view-title="{{title}}">
+	<ion-content class="has-header has-footer">
+    <div class="list">
+      <!-- Lighting Items -->
+      <ion-item class="item item-divider">
+        Lighting
+      </ion-item>
+      <ion-item class="item">
+        <p>Turn off {{data.lights1}} light fixtures</p>
+        <span class="badge badge-custom">{{round(data.lights1 * 1.6 * 30 * 60)}}</span>
+        <input type="range" style="width: 100%" class="range-custom" min="0" max="5" ng-model="data.lights1" ng-change="recalc()">
+      </ion-item>
+      <ion-item class="item">
+        <p>Replace {{data.lights2}} incandescents with CFL bulbs</p>
+        <span class="badge badge-custom">{{round(data.lights2 * 46 * 48)}}</span>
+        <input type="range" style="width: 100%" min="0" max="5" ng-model="data.lights2" ng-change="recalc()">
+      </ion-item>
+      <ion-item class="item">
+        <p>Replace {{data.lights3}} incandescents with LED bulbs</p>
+        <span class="badge badge-custom">{{round(data.lights3 * 50 * 48)}}</span>
+        <input type="range" style="width: 100%" min="0" max="5" ng-model="data.lights3" ng-change="recalc()">
+      </ion-item>
+      <ion-item class="item">
+        <p>Replace {{data.lights4}} CFL bulbs with LED bulbs</p>
+        <span class="badge badge-custom">{{round(data.lights4 * 4 * 48)}}</span>
+        <input type="range" style="width: 100%" min="0" max="5" ng-model="data.lights4" ng-change="recalc()">
+      </ion-item>
+
+      <!-- Heating and Air -->
+      <ion-item class="item item-divider">
+        Heating and Air
+      </ion-item>
+      <ion-item class="item">
+        <p>Use A/C for {{data.heat1}} fewer hours per day</p>
+        <span class="badge badge-custom">{{round(data.heat1 * 30000)}}</span>
+        <input type="range" style="width: 100%" class="range-custom" min="0" max="24" ng-model="data.heat1" ng-change="recalc()">
+      </ion-item>
+      <ion-item class="item">
+        <p>Use heating for {{data.heat2}} fewer hours per day</p>
+        <span class="badge badge-custom">{{round(data.heat2 * 429)}}</span>
+        <input type="range" style="width: 100%" class="range-custom" min="0" max="24" ng-model="data.heat2" ng-change="recalc()">
+      </ion-item>
+
+      <!-- Unplugging Stuff -->
+      <ion-item class="item item-divider">
+        Plug Loads
+      </ion-item>
+      <ion-item class="item item-checkbox">
+        <label class="checkbox checkbox-custom" for="unplugBox">
+          <input type="checkbox" ng-model="data.unplug" id="unplugBox" ng-change="recalc()">
+        </label>
+        Unplug small electronics
+        <span class="badge badge-custom">{{round(data.unplug * 12500)}}</span>
+      </ion-item>
+
+      <!-- Water -->
+      <ion-item class="item item-divider">
+        Water
+      </ion-item>
+      <ion-item class="item item-checkbox">
+        <label class="checkbox checkbox-custom">
+          <input type="checkbox" ng-model="data.water1" ng-change="recalc()">
+        </label>
+        Use low-flow showerhead
+        <span class="badge badge-custom">{{round(data.water1 * 1440)}}</span>
+      </ion-item>
+      <ion-item class="item item-checkbox">
+        <label class="checkbox checkbox-custom">
+          <input type="checkbox" ng-model="data.water2" ng-change="recalc()">
+        </label>
+        Wash clothes in cold-cycle
+        <span class="badge badge-custom">{{round(data.water2 * 8100)}}</span>
+      </ion-item>
+      <ion-item class="item">
+        <p>Dry clothes on line {{data.water3}}% of the time</p>
+        <span class="badge badge-custom">{{round(data.water3 * 740)}}</span>
+        <input type="range" style="width: 100%" class="range-custom" min="0" max="100" ng-model="data.water3" ng-change="recalc()">
+      </ion-item>
+    </div>
+  </ion-content>
+  <div ng-class="{'has-tabs': footerAdj()}" class="bar bar-footer bar-custom">
+    <button class="button button-icon ion-toggle light" ng-click="cycle()"></button>
+    <div class="title">{{ watts }}</div>
+    <button class="button button-icon ion-refresh light" ng-click="reset()"></button>
+  </ion-footer>
+</ion-view>

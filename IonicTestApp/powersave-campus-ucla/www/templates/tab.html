@@ -1,0 +1,50 @@
+<ion-nav-bar ng-controller="global" class="bar-custom" ng-class="{'has-tabs-top': isIOS()}">
+  <ion-nav-back-button>
+  </ion-nav-back-button>
+</ion-nav-bar>
+<ion-tabs ng-controller="global" ng-class="{'tabs-icon-top tabs-custom': isIOS(), 'tabs-custom': !isIOS()}" class="tabs-color-active-light tabs-color-light">
+	<div ng-if="isIOS()">
+		<!-- For traditional iOS tabs -->
+		<ion-tab title="Home" icon="ion-home" ui-sref="app.home">
+			<ion-nav-view name="app-home"></ion-nav-view>
+		</ion-tab>
+
+		<ion-tab title="Meet the Board" icon="ion-person-stalker" ui-sref="app.board">
+			<ion-nav-view name="app-board"></ion-nav-view>
+		</ion-tab>
+
+		<ion-tab title="Calendar" icon="ion-calendar" ui-sref="app.cal">
+			<ion-nav-view name="app-events"></ion-nav-view>
+		</ion-tab>
+
+		<ion-tab title="Calculator" icon="ion-calculator" ui-sref="app.calc">
+			<ion-nav-view name="app-calc"></ion-nav-view>
+		</ion-tab>
+
+		<ion-tab title="More" icon="ion-more" ui-sref="app.more">
+			<ion-nav-view name="app-more"></ion-nav-view>
+		</ion-tab>
+	</div>
+	<div ng-if="!isIOS()" hidden>
+		<!-- For beautiful master-race Android tabs -->
+		<ion-tab title="Home" class="tab-item-custom" ui-sref="app.home">
+			<ion-nav-view name="app-home"></ion-nav-view>
+		</ion-tab>
+
+		<ion-tab title="Meet the Board" class="tab-item-custom" ui-sref="app.board">
+			<ion-nav-view name="app-board"></ion-nav-view>
+		</ion-tab>
+
+		<ion-tab title="Calendar" class="tab-item-custom" ui-sref="app.cal">
+			<ion-nav-view name="app-events"></ion-nav-view>
+		</ion-tab>
+
+		<ion-tab title="Calculator" class="tab-item-custom" ui-sref="app.calc">
+			<ion-nav-view name="app-calc"></ion-nav-view>
+		</ion-tab>
+
+		<ion-tab title="More" class="tab-item-custom" ui-sref="app.more">
+			<ion-nav-view name="app-more"></ion-nav-view>
+		</ion-tab>
+	</div>
+</ion-tabs>

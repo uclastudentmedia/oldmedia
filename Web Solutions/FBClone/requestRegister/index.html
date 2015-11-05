@@ -1,0 +1,57 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Reqister New User</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/js/client/2.0.2/firebase.js'></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+        <style type="text/css">
+            /* CSS */ 
+        </style>
+    </head>
+    <body>
+        <script type='text/javascript'>
+            var myDataRef = new Firebase("https://eventsinla.firebaseio.com/");
+
+            function submitUserRequest()
+            {
+                if( $("#firstReq").val() == "" || $("#lastReq").val() == "" || $("#emailReq").val() == "" )
+                {
+                    alert("Please fill out the necessary information!");
+                    return;
+                }
+
+                var key = $("#emailReq").val().replace(/[^\w\s]/gi, '');
+                myDataRef.child("Users").child( key ).set({ name: $("#firstReq").val() + " " + $("#lastReq").val().trim().toUpperCase().charAt(0) + ".", email: $("#emailReq").val(), status: "Pending" }, function() { 
+                    alert("Request submitted successfully!");
+                    window.location.href = "..";
+                });
+            } 
+        </script>
+        <div data-role="content">
+            <h1>Request Registration</h1>
+            <div class="ui-grid-a">
+                <div class="ui-block-a">
+                    <label for="firstReq">First Name</label>
+                    <input type="text" id="firstReq" value="">
+                </div>
+                <div class="ui-block-b">
+                    <label for="lastReq">Last Name</label>
+                    <input type="text" id="lastReq" value="">
+                </div>
+            </div>
+            <label for="emailReq">Email</label>
+            <input type="text" id="emailReq" value="">
+            <p>Please allow some time for your account to be approved. You should receive a verification email within the next 24 hours!</p>
+            <hr />
+            <br />
+            <button type="button" class="ui-btn" onclick="submitUserRequest();">Register</button>
+        </div>
+    </body>
+</html>

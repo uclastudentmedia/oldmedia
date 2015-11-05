@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="themes/colors.css" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Traffic Tracker</title>
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.css" /> 
+  <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script> 
+  <script src="http://malsup.github.io/jquery.blockUI.js"></script> 
+  <script src="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.js"></script>
+  <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+  <script src="my.js"></script>
+
+  <!-- User-generated css -->
+  <style>
+		#footerTabs {
+			background: #FFF -webkit-radial-gradient(circle, #FFF, #dee2e4);
+		}
+		.ui-listview sup {
+			font-size: 0.6em;
+			color: #cc0000;
+		}
+		body
+		{
+			background-color:grey;
+		}
+		a.inv
+		{
+			visibility:hidden;
+		}
+
+	</style>
+
+  <!-- User-generated js -->
+  <script>	
+	/**
+	* Array that holds the names of all of the items from the listview. This array will be read
+	* by the populatePages method to determine the names of all of the pages.
+	*
+	* @author		Albert Deng
+	*/
+	var nameArray = [ "Powell Library", "Young Research Library", "Law Library", "Management Library", "De Neve", "FEAST at Rieber", "Covel" ];
+
+	// var nameArray = new Array();
+  
+  	var myDataRef = new Firebase('https://uclastudentmedia.firebaseio.com/trafficTracker');
+
+  	var oldestTimesArray = [0, 0, 0, 0];
+	
+	var keyDictionary = new Object();
+
+	$(document).ready(function() 
+	{
+		$.blockUI({ 
+            message: null, 
+            
+        });
+
+		myDataRef.once( 'value', function(dataSnapshot)
+		{
+			var data = dataSnapshot.val();
+			for ( var i in data )
+			{
+				keyDictionary[data[i]['name']] = i;
+				// alert(data[i]['name']);
+
+				var sum = 0;
+
+				for ( var j in data[i]['submissions'] )
+				{
+					sum += parseInt( data[i]['submissions'][j][0] )	
+				}
+
+				var average = sum / returnSize( data[i]['submissions'] );
+				
+				setColor( data[i]['name'], average );
+
+				$('#butScale' + nameArray.indexOf(data[i]['name'])).button().children().children().html( (6 - average.toFixed(2)).toFixed(2) );
+
+				$('#ratingTag' + nameArray.indexOf(data[i]['name'])).html(6 - data[i]['submissions'][findLastKey( data[i]['submissions'] )][0]);
+
+				oldestTimesArray[nameArray.indexOf(data[i]['name'])] = data[i]['submissions'][findLastKey( data[i]['submissions'] )][1];
+			}
+
+	   		$('#overlay').fadeOut();
+	   		$.unblockUI();
+		});
+
+		myDataRef.on( 'child_changed', function(dataSnapshot, prevChildName) 
+		{
+			// dataDictionary is the dictionary of data for the child that is changed
+			var dataDictionary = dataSnapshot.val();
+
+			var sum = 0;
+			for ( var q in dataDictionary['submissions'] )
+			{
+				sum += parseInt(dataDictionary['submissions'][q][0]);
+			}
+
+			sum /= returnSize(dataDictionary['submissions']);
+			// alert(sum);
+
+			// This will remove old entries, uncomment when code is final
+			// removeOld( dataDictionary['name'], findKeysToRemove(dataDictionary['submissions']));
+
+			setColor ( dataDictionary['name'], sum);
+
+			//$( '#' + buttonArray[loc] ).html( '<span class="ui-btn-inner ui-btn-corner-all"><span class="ui-btn-text">' + averageRating( loc ) + '</span></span>' );
+
+			$('#butScale' + nameArray.indexOf(dataDictionary['name'])).children().children().html( (6 - sum.toFixed(2)).toFixed(2) );
+
+			$('#ratingTag' + nameArray.indexOf(dataDictionary['name'])).html(6 - dataDictionary['submissions'][findLastKey( dataDictionary['submissions'] )][0]);
+
+			oldestTimesArray[nameArray.indexOf(dataDictionary['name'])] = dataDictionary['submissions'][findLastKey( dataDictionary['submissions'] )][1];
+		});
+	});
+
+	/**
+	 * Takes the information from the feedback form and updates the array's prior information.
+	 * Updates the firebase array's first dimensional index from loc; averages against the existing rating
+	 * with the scale parameter. Intended to be used by the button 'sub'.
+	 * 
+	 * @param loc	The location being modified
+	 * @param scale	The rating
+	 * @author      Albert Deng
+	 */
+	function submitResponse( loc, scale )
+	{
+		var entry = [ scale, $.now() ];
+		myDataRef.child(keyDictionary[loc]).child('submissions').push(entry);
+
+		updatePage( loc );
+
+		alert("Your feedback has been recorded!");
+	}
+
+	function removeOld( key, targets )
+	{
+		var currentDataRef = myDataRef.child(key).child('submissions'); 
+
+		for ( var i = 0; i < targets.length; i++ )
+		{
+			currentDataRef.child(targets[i]).remove();
+		}
+		alert( targets.length + " removed!" );
+	}
+
+	function findKeysToRemove( dictionary )
+	{
+		var tempKeysToRemove = new Array();
+
+		$.each( dictionary, function( index, value )
+		{
+			var difference = parseInt( $.now() ) - parseInt( value[1] );
+			if ( difference > 3600000 )
+			{
+				tempKeysToRemove.push(index);
+			}
+		});
+
+		return tempKeysToRemove;
+	}
+
+	/**
+	 * Calculates a hex color code based on the numerical average. 
+	 * 
+	 * @param average	The current average of the given location
+	 * @return			A string containing the calculated hexadecimal code
+	 * @author      	Albert Deng
+	 */
+	function colorScale ( average )
+	{
+		var hexArray = [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' ];	
+
+		if ( average == 0 )
+		{
+			return "5px solid #AAA";
+		}
+
+		var index = Math.round( ( average - 1 )/(0.129) );
+		var returnHex = "";
+		
+		if ( index == 16 )
+		{
+			returnHex = "#FF0";
+		}
+		else if ( index < 16 )
+		{
+			var temp = "#F";
+			temp += hexArray[index] + "0";
+			returnHex = temp;
+		}
+		else if ( index > 16 )
+		{
+			var secondTemp = "#";
+			secondTemp += hexArray[( 31 - index )] + "F0";
+			returnHex = secondTemp;
+		}
+		
+		return "5px solid " + returnHex;
+	}
+	
+	/**
+	 * Sets the color of the side gradient for the given item in the
+	 * listview. Calls the colorScale method to return the border-left 
+	 * theme, then sets it for the given location.
+	 * 
+	 * @param name	The specified listview to set the color
+	 * @param scale	The current average	for that location
+	 * @author      Albert Deng
+	 */
+	function setColor( name, scale )
+	{
+		var workingName = name.replace(/\s+/g, '');
+
+		$("#" + workingName).css('border-left', colorScale( scale ));
+		$("#" + workingName).parent().listview('refresh');
+		
+		document.location.href = "#";
+	}
+	
+	/**
+	 * Determines how long ago the specified time occurred; returns it
+	 * as a function of either seconds, minutes, or hours. If the parameter
+	 * is greater than 24 hours, it will return "a long time ago".
+	 * 
+	 * @param oldTime	The time to find a difference for
+	 * @author      	Albert Deng
+	 */
+	function parseTimeDifference( oldTime )
+	{
+		var difference = parseInt( $.now() ) - parseInt( oldTime );
+		
+		if ( difference < 5000 )
+		{
+			return "just now";
+		}
+		else if ( difference >= 5000 && difference < 60000 )
+		{
+			return Math.round( difference/1000 ) + " seconds ago";
+		}
+		else if ( difference >= 60000 && difference < 3600000 )
+		{
+			return Math.round( difference/60000 ) + " minutes ago";
+		}
+		else if ( difference >= 3600000 && difference < 86400000 )
+		{
+			return Math.round ( difference/3600000 ) + " hours ago";
+		}
+		else if ( difference >= 86400000 && difference < 604800000 )
+		{
+			return Math.round ( difference/86400000 ) + " days ago";
+		}
+		else
+		{
+			return "a long time ago";
+		}
+	}
+
+	/**
+	 * Returns the key of the last element pushed to the dictionary based
+	 * on the time of the element. 
+	 * 
+	 * @param loc	The location to update
+	 * @author     	Albert Deng
+	 */
+	function findLastKey ( dictionary )
+	{
+		var biggestTime = 0;
+		var currentIndex = "";
+
+		$.each( dictionary, function( index, value )
+		{
+			if ( value[1] > biggestTime )
+			{
+				biggestTime = value[1];
+				currentIndex = index;
+			}
+		});
+
+		return currentIndex;
+	}
+
+	function showHideCategory ( category, checkbox )
+	{
+		$('#' + checkbox ).prop('checked') == true ? $('#' + category).show() : $('#' + category).hide()
+	}
+	
+	/**
+	 * Updates each content page with a rolling timestamp. All other legacy functions
+	 * have been moved to the initialization method.
+	 * 
+	 * @param loc	The location to update
+	 * @author     	Albert Deng
+	 */
+	function updatePage( loc )
+	{
+		$( '#timeTag' + nameArray.indexOf(loc) ).html( parseTimeDifference ( oldestTimesArray[nameArray.indexOf(loc)] ));
+	}
+	
+	/**
+	 * Responsible for creating the pages linked to from the listview on the homepage.
+	 * Also sets up the buttonArray to contain a list of the names for all of the buttons
+	 * that are manipulated by the submitResponse method.
+	 *
+	 * @author		Albert Deng
+	 */
+	function populatePages ()
+	{
+		for ( var i = 0; i < nameArray.length; i++ )
+		{ 
+			// Header Setup
+			document.write('<div data-theme="f" data-role="page" id="fp' + i + '">');
+			document.write('<div data-theme="f" data-role="header">')
+			document.write('<a data-role="button" data-rel="back" href="#page1" data-icon="arrow-l" data-iconpos="left" class="ui-btn-left">');
+			document.write('Back');
+			document.write('</a>');
+			document.write('<h3>');
+			document.write( nameArray[i] );
+			document.write('</h3>');
+			document.write('</div>');
+			
+			// Page Content Setup
+			document.write('<div data-role="content">');
+			document.write('<a id="butScale' + i + '" data-role="button" class="ui-btn-plain" href="#" value="' + i + '">');
+			document.write( '0' );
+			document.write('</a><div><p>');
+			document.write("This is <b>" + nameArray[i] + "</b>'s rating for how busy it is ");
+			document.write('on a scale from 1 - 5, with 1 being the LEAST busy and 5 being the MOST busy.');
+			document.write('</p><p>');
+			document.write('Last updated: <b id="timeTag' + i + '">never</b>'); // TODO Setup time input
+			document.write('</p><p>');
+			document.write('Most recent post: <b id="ratingTag' + i + '">3</b>'); // TODO Setup time input
+			document.write('</p></div>');
+			document.write('</div>');
+			
+			// Tabbar Setup
+			document.write('<div data-role="tabbar" data-id="bottom" data-iconpos="top" data-theme="f">');
+			document.write('<ul><li>');
+			document.write('<a href="#page1" data-theme="" data-icon="home">Home</a>');
+			document.write('</li><li>');
+			document.write('<a href="#page2" data-theme="" data-icon="plus">Feedback</a>');
+			document.write('</li><li>');
+			document.write('<a href="#page3" data-theme="" data-icon="grid">Options</a>');
+			document.write('</li></ul></div></div>'); 
+		} 
+	}
+	
+	/**
+	 * Debug function with various functions.
+	 * 
+	 * @author      Albert Deng
+	 */
+	function debugFunction( index )
+	{
+		// myDataRef.set({loc3:{name:"hello", submissions: [0, 1, 2], type: "library"}});
+		
+		// myDataRef.child('loc3/submissions').push(5);
+
+		myDataRef.child('loc3/submissions').on( 'value', function(dataSnapshot)
+		{
+			var data = dataSnapshot.val();
+			for ( var i in data )
+			{
+				alert(data[i]);
+			}
+			// data is a dictionary
+		});
+	}
+
+	/**
+	 * Returns the length of the associative array.
+	 * 
+	 * @param obj		The array to check
+	 * @author     		StackOverflow
+	 */
+	function returnSize( obj ) 
+	{
+	    var size = 0, key;
+	    for (key in obj) {
+	        if (obj.hasOwnProperty(key)) size++;
+	    }
+	    return size;
+	};
+
+	/**
+	 * Adds an entry to the firebase array with the specified parameters.
+	 * 
+	 * @warning			Delete this method after complete
+	 * @param name   	The name of the location
+	 * @param type   	The type of the location
+	 * @author     		Albert Deng
+	 */
+	function writeEntry( name, type )
+	{
+		// var entry = "{" + entryName + ":{name:" + name + ", submissions: [0, 1, 2], type: " + type + "}}";
+		var entry = {name: name, submissions: {0: [3, $.now()] }, type: type};
+
+		myDataRef.push(entry);
+	}
+  </script>
+</head>
+<body>
+  <!-- Home -->
+  <div data-theme="f" data-role="page" id="page1">
+      <div data-theme="f" data-role="header">
+          <h3>
+              Availability
+          </h3>
+      </div>
+      <div data-role="content">
+          <ul id="libraries" data-role="listview" data-divider-theme="f" data-inset="true">
+          	  <li data-role="list-divider">Libraries</li>
+              <li id="PowellLibrary" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false">
+                  <a href="#fp0" data-transition="slide" onclick="updatePage( 'Powell Library' )" value="0">Powell Library</a>
+              </li>
+              <li id="YoungResearchLibrary" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false">
+                  <a href="#fp1" data-transition="slide" onclick="updatePage( 'Young Research Library' )" value="1">Young Research Library</a>
+              </li>
+              <li id="LawLibrary" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false">
+                  <a href="#fp2" data-transition="slide" onclick="updatePage( 'Law Library' )" value="2">Law Library</a>
+              </li>
+              <li id="ManagementLibrary" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false">
+                  <a href="#fp3" data-transition="slide" onclick="updatePage( 'Management Library' )" value="3">Management Library</a>
+              </li>
+          </ul>
+          <ul id="dininghalls" data-role="listview" data-divider-theme="f" data-inset="true">
+          	  <li data-role="list-divider">Dining Halls</li>
+              <li id="DeNeve" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false">
+                  <a href="#fp4" data-transition="slide" onclick="updatePage( 'De Neve' )" value="4">De Neve</a>
+              </li>
+              <li id="FEASTatRieber" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false">
+                  <a href="#fp5" data-transition="slide" onclick="updatePage( 'FEAST at Rieber' )" value="5">FEAST at Rieber</a>
+              </li>
+              <li id="Covel" data-theme="f" style="border-left: 5px solid #AAA" data-icon="false">
+                  <a href="#fp6" data-transition="slide" onclick="updatePage( 'Covel' )" value="6">Covel</a>
+              </li>
+          </ul>
+      </div>
+      <div data-role="tabbar" data-id="bottom" data-iconpos="top" data-theme="f">
+          <ul>
+              <li>
+                  <a href="#page1" class="ui-btn-active ui-state-persist" data-theme="" data-icon="home">Home</a>
+              </li>
+              <li>
+                  <a href="#page2" data-theme="" data-icon="plus">Feedback</a>
+              </li>
+              <li>
+                  <a href="#page3" data-theme="" data-icon="grid">Options</a>
+              </li>
+          </ul>
+      </div>
+  </div>
+
+  <!-- Submission -->
+  <div data-theme="f" data-role="page" id="page2">
+      <div data-theme="f" data-role="header">
+          <h3>Send Feedback</h3>
+      </div>
+      <div data-theme="f" data-role="content">
+          <div data-role="fieldcontain">
+              <label for="lbar">Where are you?</label>
+              <select id="lbar" name="">
+                <optgroup label="Libraries">
+		            <option value="Powell Library">Powell Library</option>
+		            <option value="Young Research Library">Young Research Library</option>
+		            <option value="Law Library">Law Library</option>
+		            <option value="Management Library">Management Library</option>
+		        </optgroup>
+		        <optgroup label="Dining Halls">
+		            <option value="De Neve">De Neve</option>
+		            <option value="FEAST at Rieber">FEAST at Rieber</option>
+		            <option value="Covel">Covel</option>
+		        </optgroup>
+              </select>
+          </div>
+          <div data-role="fieldcontain">
+              <label for="bbar">How busy is it? (1 = Empty, 5 = Full)</label>
+              <input id="bbar" type="range" name="slider" value="3" min="1" max="5" data-highlight="false">
+          </div>
+          <button type="button" id="sub" onclick="submitResponse($('#lbar').val(),6-$('#bbar').val())">Submit!</button>
+      </div>
+      <div data-role="tabbar" data-id="bottom" data-iconpos="top" data-theme="f">
+          <ul>
+              <li>
+                  <a href="#page1" data-theme="" data-icon="home">Home</a>
+              </li>
+              <li>
+                  <a href="#page2" class="ui-btn-active ui-state-persist" data-theme="" data-icon="plus">Feedback</a>
+              </li>
+              <li>
+                  <a href="#page3" data-theme="" data-icon="grid">Options</a>
+              </li>
+          </ul>
+      </div>
+  </div>
+
+  <!-- Options -->
+  <div data-theme="f" data-role="page" id="page3">
+      <div data-theme="f" data-role="header">
+          <h3>Options</h3>
+      </div>
+      <div data-role="content">
+      		<form>
+				<fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+				    <legend>Categories:</legend>
+				    <input type="checkbox" name="library-check" id="library-check" checked="checked" onchange="showHideCategory('libraries', 'library-check')">
+				    <label for="library-check">Libraries</label>
+				    <input type="checkbox" name="dininghall-check" id="dininghall-check" checked="checked" onchange="showHideCategory('dininghalls', 'dininghall-check')">
+				    <label for="dininghall-check">Dining Halls</label>
+				    <input type="checkbox" name="gym-check" id="gym-check" checked="checked">
+				    <label for="gym-check">Gyms</label>
+				</fieldset>
+			</form>
+      </div>
+      <div data-role="tabbar" data-id="bottom" data-iconpos="top" data-theme="f">
+			<ul>
+				<li>
+					<a href="#page1" data-theme="" data-icon="home">Home</a>
+				</li>
+				<li>
+					<a href="#page2" data-theme="" data-icon="plus">Feedback</a>
+				</li>
+				<li>
+					<a href="#page3" class="ui-btn-active ui-state-persist" data-theme="" data-icon="grid">Options</a>
+				</li>
+			</ul>
+      </div>
+  </div>
+  
+  <!-- Location Page --> 
+  <script type="text/javascript" language="JavaScript">
+		populatePages();
+  </script>
+  
+</body>
+</html>

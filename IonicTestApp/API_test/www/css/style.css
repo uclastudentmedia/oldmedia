@@ -1,0 +1,153 @@
+/* Empty. Add your own CSS if you like */
+.tab-nav {
+  overflow-x: scroll !important;
+  overflow-y: hidden !important;
+  position: absolute !important;
+  height: 48px !important;
+  border-bottom: 0px !important;
+}
+
+.tab-item-custom {
+  display: inline-table !important;
+  padding-left: 12px;
+  padding-right: 12px;
+  font-size: inherit;
+  line-height: 39px !important;
+}
+
+.tab-item-active-custom {
+  height: 46px !important;
+}
+
+.slider-slide h3{
+  color:#fff;
+  margin-top:10px;
+}
+.scroll{
+  height:100%;
+}
+
+.fit-img{
+  width: 100% !important;
+  height: 100% !important;
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+  background-color: #000;
+}
+
+.fit-img img{
+  display:block;
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0 auto;
+  width: 100%;
+  height: auto;
+}
+
+.fit-img h2 {
+  position: absolute;
+  bottom: 15%;
+  left: 0;
+  width: 100%;
+  background: rgb(0, 0, 0); /* fallback color */
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.fit-img h2 p {
+  color: white; 
+  font: bold 20px/45px Helvetica, Sans-Serif; 
+  margin: 0px;
+  line-height: 1.1;
+  padding-top: 15px;
+}
+
+.fit-img h2 p:nth-child(2) {
+  color: white; 
+  font: bold 15px/20px Helvetica, Sans-Serif; 
+  letter-spacing: -1px;
+  margin-bottom: 10px;
+}
+
+.hours-detail table{
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.hours-detail thead {
+  font-size: 16px;
+  font-weight: bold;
+  text-align: left;
+  border-bottom: 2px solid grey;
+}
+
+.hours-detail th, td {
+  padding-left: 1em;
+}
+
+.hours-detail tbody > tr {
+  border-bottom: 1px solid lightgrey;
+}
+
+.spacing {
+  padding: 0 5px;
+}
+
+.article-header{
+  text-align:left;
+  font-size:25px;
+  border-left:6px solid lightgray;
+  padding-left:10px;
+}
+
+.thumbnail-image{
+  width:80%;
+  max-height:300px;
+  box-shadow:1px 2px 3px gray;
+  border-radius:5px;
+}
+
+.thumbnail-caption{
+  font-size:10px;
+  color:gray;
+  text-align:center;
+}
+
+.image-container{
+  text-align:center;
+}
+
+.article-content{
+  padding-left:15px;
+  padding-right:15px; 
+  text-align:justify; 
+}
+
+.article-content > p > img {
+  width: 100%;
+}
+
+.article-content > h1 {
+  font-size: 22px !important;
+}
+
+.article-content > h2 {
+  font-size: 20px !important;
+}
+
+.article-content > h3 {
+  font-size: 16px !important;
+}
+
+.entity-feat > p > img {
+  width: 100%;
+}
+
+.entity-feat > p {
+  white-space: normal;
+}
+
+.item-avatar > a > img {
+  width: 3em !important;
+  height: 3em !important;
+}

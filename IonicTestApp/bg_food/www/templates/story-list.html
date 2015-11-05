@@ -1,0 +1,22 @@
+<ion-view view-title="Food Feed">
+	<ion-content class="has-header">
+		<ion-refresher
+	      pulling-text="Pull to refresh..."
+	      on-refresh="doRefresh()">
+	    </ion-refresher>
+		<ion-item ng-class="{'item-thumbnail-right': post.image_url}" ng-repeat="post in posts" ng-href="#/app/list/{{post.id}}">
+			<img style="vertical-align: middle;" ng-if="valid(post.image_url)" ng-src="{{post.image_url}}">
+			<h2 style="white-space:normal !important; overflow:visible;">{{post.title}}</h2>
+			<div>
+				<span style="color:#505050">{{formatDate(post.creation_date)}}</span><span> | </span><span style="color:#C0C0C0">{{post.wp_byline}}</span>
+				<p style="overflow:hidden; height:6em; white-space:normal;">
+					{{post.teaser_text}}
+				</p>
+			</div>
+		</ion-item>
+		<ion-infinite-scroll
+			on-infinite="loadMore()"
+			distance="1%">
+		</ion-infinite-scroll>
+	</ion-content>
+</ion-view>

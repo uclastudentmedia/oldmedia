@@ -1,0 +1,341 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Feed Server Panel</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.3/jquery.mobile-1.4.3.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/js/client/2.0.2/firebase.js'></script>
+
+        <!-- Imports -->
+        <script src="../js/twitterFetcher.js"></script>
+        <script src="../js/twitterScraper.js"></script>
+        <script src="../js/twitter-text.js"></script>
+        <script src="../js/cardLib.js"></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.3/jquery.mobile-1.4.3.min.js"></script>
+
+        <script src="../js/timeago.js"></script>
+        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+        <style type="text/css">
+            /* CSS */ 
+        </style>
+        <script type="text/javascript">
+            // Google Feed import
+            google.load("feeds", "1");
+        </script>
+        <script>
+            var femRef = new Firebase('https://wallsucla.firebaseio.com/sports/baseball/rss');
+            var femTwitRef = new Firebase('https://wallsucla.firebaseio.com/sports/baseball/tweets');
+
+            var firstTimeRun = false;
+            var entryArray = new Array();
+            var twitArray = new Array();
+
+            var feedObjectArray = new Array();
+            var tweetArray;
+            var cardArray = new Array();
+            var loadAmount = 15;
+            var firstEntry;
+            var firstTweet;
+            var data;
+            var newItems = 0;
+            var newEntries = 0;
+            var numRSS = 0;
+            var numTweets = 0;
+
+            // Configuration Variables
+            var oldestEntry = 14; // in days
+            var oldestTweet = 7; // in days
+
+            // Twitter Configurations
+
+            /**  
+             * In order:
+             * @UCLABaseball
+             * @DBSports
+             * UCLA Baseball
+             * UCLABaseball
+             * #UCLABaseball
+             * @UCLAAthletics
+             * 
+             */
+            var twitIDs = [ '555123951576158209', '555124239401902081', '555109218944970752', '555110831763886080', '555108713611005952', '555124100184551424' ];
+
+            var rssFeeds = new Array();
+
+            var twitConfigs = new Array();
+
+            function genConfigs() {
+                for( var i in twitIDs )
+                {
+                    twitConfigs.push({ "id": twitIDs[i], 
+                                        "domId": '',
+                                        "maxTweets": loadAmount,
+                                        "enableLinks": true, 
+                                        "showUser": true,
+                                        "showInteraction": false,
+                                        "showRetweet": false,
+                                        "showImages": true,
+                                        "dateFunction": datFunction,
+                                        "customCallback": processTweets
+                                    });
+                }
+            }
+
+            function datFunction( date )
+            {
+                return new Date( date ).toLocaleString();
+            }
+
+            // Feeds
+            
+            $(document).ready( function() {
+                // Disable for first-time run
+                
+                femRef.orderByChild("publishedDate").limitToLast(1).once( 'value', function( dataSnapshot ) {
+                    data = dataSnapshot.val();
+                    if( Object.size(dataSnapshot.val()) == 0 )
+                    {
+                        console.log("First time run!");
+                        // firstTimeRun = true;
+                        return;
+                    }
+
+                    $('#entryDisplay').text( Object.size(data) + " entries" );
+
+                    firstEntry = data[Object.keys(data)[Object.size(data) - 1]];
+                    $('#oldDisplay').text( new Date( firstEntry['publishedDate'] ).toLocaleString() );
+                    $('#oldTitleDisplay').text( ( typeof firstEntry['socialmedia'] == "undefined" ) ? firstEntry['title'] : firstEntry['text'] ); 
+                });
+
+                // Disable for first-time run
+                femTwitRef.orderByChild("publishedDate").limitToLast(1).once( 'value', function( dataSnapshot ) {
+                    data = dataSnapshot.val();
+                    $('#timeDisplay').text( new Date().toLocaleString() );
+                    if( Object.size(dataSnapshot.val()) == 0 )
+                    {
+                        console.log("First time run!");
+                        firstTimeRun = true;
+                        return;
+                    }
+
+                    firstTweet = data[Object.keys(data)[Object.size(data) - 1]];
+                    $("#oldTweet").text( new Date( firstTweet['publishedDate'] ).toLocaleString() );
+                    $("#oldTweetDisplay").text( firstTweet['text'] );
+                }); 
+                
+                setTimeout( function() {
+                    genConfigs();                    
+                    for( var i in twitConfigs )
+                    {
+                        twitterFetcher.fetch( twitConfigs[i] );
+                    }
+                    loadEntries();
+                }, 1000);
+
+                setTimeout( function() {
+                    processEntries();
+                }, 10000);
+
+                setTimeout( function() {
+                    cleanUpOld();
+                }, 20000);
+
+                setTimeout( function() {
+                    location.reload();
+                }, 5 * 60 * 1000); 
+            }); 
+
+            // Important Functions
+            function processEntries()
+            {
+                // I think these are in most recent first...
+                sortByDate( entryArray );
+                sortByDate( twitArray );
+                entryArray.reverse();
+                twitArray.reverse();
+
+                // $("#lastDisplay").text( new Date( entryArray[0]['publishedDate'] ).toLocaleString() );
+                // $('#lastTitleDisplay').text( ( typeof entryArray[0]['socialmedia'] == "undefined" ) ? entryArray[0]['title'] : entryArray[0]['text'] );
+
+                $("#lastTweet").text( new Date( twitArray[0]['publishedDate'] ).toLocaleString() );
+                $("#lastTweetDisplay").text( twitArray[0]['text'] );
+
+                //for ( var i = findIndex( entryArray, firstEntry ) - 1; i >= 0 ; i-- )
+                for ( var i = 0; i < entryArray.length; i++ )
+                // for( var i = entryArray.length - 1; i >= 0; i-- )
+                {
+                   if( !firstTimeRun && parseInt( entryArray[i]['publishedDate'] ) <= parseInt( firstEntry['publishedDate'] ))
+                    {
+                        break;
+                    }
+
+                    // TODO: Add check for duplicates
+
+                    femRef.push( entryArray[i], function(callback) {
+                        if ( callback === null ) {
+                            newEntries++;
+                            $("#statusDisplay").text("Success! Entry pushed on: " + new Date().toLocaleString() );
+                            $("#statusDisplay").css('color', 'green');
+                            $("#newEntryDisplay").text( newEntries );
+                        }
+                        else {
+                            $("#statusDisplay").text("Error! Last attempt at: " + new Date().toLocaleString() );
+                            $("#statusDisplay").css('color', 'red');
+                        }
+                    });
+                }
+
+                for ( var j = 0; j < twitArray.length; j++ )
+                // for( var j = twitArray.length - 1; j >= 0; j-- )
+                {
+                    if ( !firstTimeRun && parseInt( twitArray[j]['publishedDate'] ) <= parseInt( firstTweet['publishedDate'] ))
+                    {
+                        break;
+                    }
+
+                    femTwitRef.push( twitArray[j], function(callback) {
+                        if ( callback === null ) {
+                            newItems++;
+                            $("#statusDisplay").text("Success! Tweet pushed on: " + new Date().toLocaleString() );
+                            $("#statusDisplay").css('color', 'green');
+                            $("#newItemDisplay").text( newItems );
+                        }
+                        else {
+                            $("#statusDisplay").text("Error! Last attempt at: " + new Date().toLocaleString() );
+                            $("#statusDisplay").css('color', 'red');
+                        }
+                    });
+                }
+            }
+
+            function loadEntries()
+            {
+                var feedr = new Array();
+
+                for( var i = 0; i < rssFeeds.length; i++ )
+                {
+                    feedr[i] = new google.feeds.Feed( rssFeeds[i][0] );
+                    feedr[i].setNumEntries(loadAmount);
+
+                    var f = function(n) {
+                        feedr[n].load(function(result) {
+                            if (!result.error) {
+                                for (var j = 0; j < result.feed.entries.length; j++) {
+                                    entryArray[entryArray.length] = result.feed.entries[j];
+
+                                    var time = new Date( result.feed.entries[j]['publishedDate'] ).getTime();
+                                    entryArray[entryArray.length - 1]['publishedDate'] = time;
+                                    entryArray[entryArray.length - 1]['source'] = rssFeeds[n][1];
+                                }
+                            }
+                        });
+                    }
+                    f(i);
+                }
+            } 
+
+            // Delete old entries
+
+            function cleanUpOld()
+            {
+                var now = parseInt( $.now() );
+                var thresholdEntries = now - ( oldestEntry * 24 * 60 * 60 * 1000 );
+                var thresholdTweets = now - ( oldestEntry * 24 * 60 * 60 * 1000 );
+                var delTweets = 0;
+                var delEntries = 0;
+
+                femRef.orderByChild("publishedDate").limitToFirst(10).once( 'value', function( dataSnapshot ) {
+                    dataSnapshot.forEach( function( childSnapshot ) {
+                        if( parseInt( childSnapshot.val()['publishedDate'] ) < thresholdEntries ) {
+                            femRef.child( childSnapshot.key() ).remove();
+                            delEntries++;
+                            $("#purgedEntries").text( delEntries );
+                        }
+                    });
+                });
+
+                femTwitRef.orderByChild("publishedDate").limitToFirst(20).once( 'value', function( dataSnapshot ) {
+                    dataSnapshot.forEach( function( childSnapshot ) {
+                        if( parseInt( childSnapshot.val()['publishedDate'] ) < thresholdTweets ) {
+                            femTwitRef.child( childSnapshot.key() ).remove();
+                            delTweets++;
+                            $("#purgedTweets").text( delTweets );
+                        }
+                    });
+                });
+            }
+
+            // Helper Functions
+            function sortByDate( array )
+            {
+                array.sort( function( a, b ) {
+                    var dateA = new Date( a['publishedDate'] );
+                    var dateB = new Date( b['publishedDate'] );
+
+                    return dateA.getTime() - dateB.getTime();
+                });
+            }
+
+            function highlightTags( string )
+            {
+                var textArray = string.split(' ');
+
+                for ( var i = 0; i < textArray.length; i++ )
+                {
+                    if( textArray[i][0] == "@" || textArray[i][0] == "#" )
+                    {
+                        var endString = "<span style='color: blue'>";
+                        endString += textArray[i];
+                        endString += "</span>";
+
+                        textArray[i] = endString;
+                    }
+                }
+
+                return textArray.join(' ');
+            }
+
+            Object.size = function(obj) {
+                var size = 0, key;
+                for (key in obj) {
+                    if (obj.hasOwnProperty(key)) size++;
+                }
+                return size;
+            };
+        </script>
+    </head>
+    <body>
+        <div id="emptyDiv">
+        </div>
+        <div data-role="content">
+            <h1>UCLA Baseball Data Panel</h1>
+            <p><b>Number of Entries: </b><span id="entryDisplay"></span></p>
+            <p><b>Last Refresh: </b><span id="timeDisplay"></span></p>
+            <p><b>Last Entry: </b><span id="oldTitleDisplay"></span></p>
+            <p><b>Last Entry Stored Date: </b><span id="oldDisplay"></span></p>
+
+            <p><b>Most Recent Entry: </b><span id="lastTitleDisplay"></span></p>
+            <p><b>Most Recent Entry Date: </b><span id="lastDisplay"></span></p>
+
+            <p><b>Last Tweet: </b><span id="oldTweetDisplay"></span></p>
+            <p><b>Last Tweet Stored Date: </b><span id="oldTweet"></span></p>
+
+            <p><b>Most Recent Tweet: </b><span id="lastTweetDisplay"></span></p>
+            <p><b>Most Recent Tweet Date: </b><span id="lastTweet"></span></p>
+
+            <p><b>Status: </b><span id="statusDisplay">No Change</span></p>
+            <p><b>New Entries Pushed: </b><span id="newEntryDisplay">0</span></p>
+            <p><b>New Tweets Pushed: </b><span id="newItemDisplay">0</span></p>
+
+            <p><b>Purged Entries: </b><span id="purgedEntries">0</span></p>
+            <p><b>Purged Tweets: </b><span id="purgedTweets">0</span></p>
+        </div>
+        <script id="codeBlock">
+        </script>
+    </body>
+</html>

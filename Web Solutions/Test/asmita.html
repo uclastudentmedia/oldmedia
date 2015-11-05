@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Title</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.3/jquery.mobile-1.4.3.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.3/jquery.mobile-1.4.3.min.js"></script>
+        <style type="text/css">
+            /* CSS */ 
+        </style>
+        <script>
+            // Javascript
+			function saveInput(Name, Age)
+			{
+				return("Hello, " + Name + ", your age is " + Age);
+			}
+        </script>
+    </head>
+    <body>
+        <div data-role="content">
+            <!-- HTML -->
+			<h1 id="Output"> Hello World </h1>
+			<form>
+				 <label for="NameBox">Enter Name</label> <!-- for is an attribute that only applies to labels and corresponds with ID (name) -->
+				 <input type="text" id="NameBox" value=""> <!-- name whenever possible // fonts from jquery mobile-->
+				 <label for="AgeBox">Enter Age</label> <!-- for is an attribute that only applies to labels and corresponds with ID (name) -->
+				 <input type="text" data-clear-btn="true" id="AgeBox" value=""> <!-- name whenever possible // fonts from jquery mobile--><!-- has x to clear, placeholder ("enter name" in box)-->
+				 
+				 <!--<a href="http://www.google.com" class="ui-btn">Anchor</a> <!--jquery automatically makes hyperlink a button, use href for links not functions-->
+				 <button type="button" class="ui-btn" onclick = "$('#Output').text(saveInput($('#NameBox').val(), $('#AgeBox').val()))">Submit</button> <!--console.log('Hello, World'); ~= cout to console-->
+				 
+			</form>
+        </div>
+    </body>
+</html>

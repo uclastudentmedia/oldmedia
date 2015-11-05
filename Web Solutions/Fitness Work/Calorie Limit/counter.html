@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Calorie Counter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <link href="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.css" rel="stylesheet">
+    <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+
+    <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.js"></script>
+    <script>
+      $(function() {
+      
+      //Insert code here
+      
+      });
+      function getGender()
+      {
+           return $("input[name*=radio-choice-h-2]:checked").val();
+       }
+      function updatecalories(gender, weight, weightunit, feet, inches, age, activity)
+      {
+        $("#maintaincalories").html("<h1> <font color='#084B8A'>" +maintaincal(calcBMR(gender, weight, weightunit, feet, inches, age), activity)+" Calories </font> </h1>");
+        var totalcal = maintaincal(calcBMR(gender, weight, weightunit, feet, inches,age), activity);
+        $("#losecalories").html("<h1>  <font color='#084B8A'>" +losecal(totalcal) + " </font> </h1>");
+      }
+
+      function calcBMR(gender, weight, weightunit, feet, inches, age)
+      {
+        var height = parseInt(feet)*12+parseInt(inches);
+        var weightnum;
+        if (weightunit == "kg")
+        {
+          weightnum = parseInt(weight);
+        }
+        else if (weightunit == "lb")
+        {
+          weightnum = parseInt(weight)/2.2046;
+        }
+        var agenum = parseInt(age);
+        var BMR;
+        if (gender == "male")
+        {
+          BMR = 66.47+(13.75* weightnum)+(5.0*height)-(6.75*agenum);
+        }
+        if (gender == "female")
+        {
+          BMR =665.09+(9.56*weightnum)+(1.84*height)-(4.67*agenum);
+        }
+
+        return BMR;
+        
+      }
+      function maintaincal(bmr, activity)
+      {
+        var cal;
+        if(activity == "sedentary")
+        {
+          cal = 1.2*bmr;
+        }
+        if(activity == "lightly active")
+        {
+          cal = 1.375*bmr;
+        }
+        if(activity == "moderately active")
+        {
+          cal = 1.55*bmr;
+        }
+        if(activity == "very active")
+        {
+          cal = 1.725*bmr;  
+        }
+        if(activity == "extremely active")
+        {
+          cal = 1.9=bmr;  
+        }
+
+        return Math.round(cal);
+      }
+
+      function losecal(maincal)
+      {
+        return (Math.round(maincal-500)+" - "+Math.round(maincal-250)+" Calories");
+      }
+    </script>
+      <style type="text/css">
+        * { 
+            font-family: "Celeste Mobi Pro", Celeste, serif;
+        }
+
+    </style>
+</head>
+<body>
+  <div data-role="page" data-control-title="Home" id="page1">
+      <div data-role="content">
+            <form>
+                <fieldset id="genderChoice" data-role="controlgroup" data-type="horizontal" align="center" style="margin-bottom:0px">
+                    <input type="radio" name="radio-choice-h-2" id="radio-choice-h-2a" value="male" checked="checked">
+                    <label for="radio-choice-h-2a">Male</label>
+                    <input type="radio" name="radio-choice-h-2" id="radio-choice-h-2b" value="female">
+                    <label for="radio-choice-h-2b">Female</label>
+                </fieldset>
+            </form>
+          <div class="ui-grid-a">
+              <div class="ui-block-a">
+                  <div data-role="fieldcontain" data-controltype="textinput">
+                      <input name="" id="weight" placeholder="Enter Weight..." value=""
+                      type="text" data-mini="true">
+                  </div>
+              </div>
+              <div class="ui-block-b">
+                  <div data-role="fieldcontain" data-controltype="selectmenu">
+                      <select id="weightunit" name="" data-mini="true">
+                          <option value="lb">
+                              Lb
+                          </option>
+                          <option value="kg">
+                              Kg
+                          </option>
+                      </select>
+                  </div>
+              </div>
+          </div>
+          <div data-role="fieldcontain" data-controltype="textinput">
+              <input name="" id="age" placeholder="Enter Age..." value="" type="text"
+              data-mini="true">
+          </div>
+          <div data-controltype="textblock">
+              <p>
+                  <b>
+                      Enter Height:
+                  </b>
+              </p>
+          </div>
+          <div class="ui-grid-a">
+              <div class="ui-block-a">
+                  <div data-role="fieldcontain" data-controltype="textinput">
+                      <input name="" id="feet" placeholder="Feet" value="" type="text"
+                      data-mini="true">
+                  </div>
+              </div>
+              <div class="ui-block-b">
+                  <div data-role="fieldcontain" data-controltype="textinput">
+                      <input name="" id="inches" placeholder="Inches" value="" type="text"
+                      data-mini="true">
+                  </div>
+              </div>
+          </div>
+          <div data-controltype="textblock">
+              <p>
+                  <b>
+                      Level of Exercise:
+                  </b>
+              </p>
+          </div>
+          <div data-role="fieldcontain" data-controltype="selectmenu">
+              <select id="activitymenu" name="" data-mini="true">
+                  <option value="sedentary">
+                      Sedentary
+                  </option>
+                  <option value="lightly active">
+                      Lightly Active
+                  </option>
+                  <option value="moderately active">
+                      Moderately active
+                  </option>
+                  <option value="very active">
+                      Very Active
+                  </option>
+                  <option value="extremely active">
+                      Extremely Active
+                  </option>
+              </select>
+          </div>
+          <a onclick ="updatecalories(getGender(), $('#weight').val(), $('#weightunit').val(), $('#feet').val(), $('#inches').val(), $('#age').val(), $('#activitymenu').val())" data-role="button" data-transition="flip" href="#page3">
+              Submit
+          </a>
+      </div>
+  </div>
+  <div data-role="page" data-control-title="Calculations" id="page3">
+      <div data-role="content">
+          <div align="center" data-controltype="textblock">
+              <h1>
+                  <b>
+                      You should consume:
+                  </b>
+              </h1>
+          </div>
+          <div align="center" id ="maintaincalories"data-controltype="textblock">
+              <h1>
+                  <b>
+                    <font color="#084B8A">
+                      2000 Calories
+                    </font>
+                      <span id="_mce_caret" data-mce-bogus="1" style="">
+                          <span style="font-size: xx-large;" data-mce-bogus="1">
+                              ﻿
+                          </span>
+                      </span>
+                  </b>
+              </h1>
+          </div>
+          <div align="center" data-controltype="textblock">
+              <h1>
+                  <b>
+                      to maintain your current weight
+                  </b>
+              </h1>
+          </div>
+          <hr style="height:3px; background-color:#ccc; border:0; margin-top:12px; margin-bottom:12px;">
+          <div align="center" data-controltype="textblock">
+              <h1>
+                  <b>
+                      You should consume
+                  </b>
+              </h1>
+          </div>
+          <div align="center" id="losecalories"data-controltype="textblock">
+              <p>
+                  <h1>
+                    <font color="#084B8A">
+                     1500-1750 Calories
+                     </font>
+                      <span style="font-size: xx-large;" data-mce-style="font-size: xx-large;">
+                          ﻿
+                      </span>
+                  </h1>
+              </p>
+          </div>
+          <div align="center" data-controltype="textblock">
+              <p>
+                  <h1>
+                      to lose about 1 lb a week
+                  </h1>
+              </p>
+          </div>
+      </div>
+  </div>
+</body>
+</html>

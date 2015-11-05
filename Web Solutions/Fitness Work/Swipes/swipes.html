@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Swipe Counter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <link href="http://code.jquery.com/mobile/1.4.1/jquery.mobile-1.4.1.min.css" rel="stylesheet">
+  <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+
+  <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+  <script src="http://code.jquery.com/mobile/1.4.1/jquery.mobile-1.4.1.min.js"></script>
+  <script>
+    function updateSwipes(week, day, plan)
+    {
+        var swipes = calculate (week, day, plan);
+        if ( !(swipes > 0) )
+          $("#header").text("Enter Info");  
+        else
+          $("#header").text(swipes+" Swipes");
+    }
+
+    function calculate(week, day, plan)
+    { 
+        var swipes;
+        var daynum = parseInt(day);
+        var weeknum = parseInt(week);
+        if (plan == "11")
+        
+{            if (daynum < 5)
+            {
+                swipes = 13 - 2*daynum;
+            }
+            else
+            {
+                swipes = 4 - (daynum-4);
+            }
+        }
+
+        if (plan == "14")
+        {
+            swipes = 16 -2*daynum;
+        }
+
+        if (plan == "19")
+        {
+            if (daynum < 6)
+            {
+                swipes = 22-3*daynum;
+            }
+            else
+            {
+                swipes = 2*(8-daynum);
+            }
+        }
+
+        if (plan == "14P")
+        {
+            var total = 14 * 12 -4 +2//10 weeks + finals + 0 week - finals weekend + current day
+            swipes = total - 14*weeknum - 2*daynum;
+        }
+
+        if (plan == "19P")
+        {
+            var total = 19 * 12 -4 +2 //10 weeks + finals + 0 week - finals weekend + current day
+            if (daynum < 6)
+            {
+                swipes = total - 19*(weeknum) - 3*daynum;
+            }
+            else
+            {
+                swipes = total -19*(weeknum +1) + 2*(8-daynum);
+            }
+        }
+
+        return swipes;
+    }
+
+  </script>
+  <style type="text/css">
+    * { 
+        font-family: "Celeste Mobi Pro", Celeste, serif;
+    }
+  </style>
+</head>
+<body>
+  <div data-role="page" data-control-title="Home" id="page1">
+      <div data-role="content">
+          <h1 id="header" align="center">
+              Enter Info
+          </h1>
+          <div align="center" data-role="fieldcontain" data-controltype="radiobuttons">
+              <fieldset onchange ="updateSwipes($('#selectmenu3').val(), $('#selectmenu4').val(), $('input:checked').val())" id="radiobuttons" data-role="controlgroup" data-type="horizontal" data-mini="true">
+                  <legend>
+                      Choose:
+                  </legend>
+                  <input id="radio1" name="" value="11" type="radio">
+                  <label for="radio1">
+                      11
+                  </label>
+                  <input id="radio2" name="" value="14" type="radio">
+                  <label for="radio2">
+                      14
+                  </label>
+                  <input id="radio3" name="" value="19" type="radio">
+                  <label for="radio3">
+                      19
+                  </label>
+                  <input id="radio5" name="" value="14P" type="radio">
+                  <label for="radio5">
+                      14P
+                  </label>
+                  <input id="radio4" name="" value="19P" type="radio">
+                  <label for="radio4">
+                      19P
+                  </label>
+              </fieldset>
+          </div>
+          <div align="center" data-role="fieldcontain" data-controltype="selectmenu">
+              <label for="selectmenu3">
+                  Choose Week:
+              </label>
+              <select onchange = "updateSwipes($('#selectmenu3').val(), $('#selectmenu4').val(), $('input:checked').val())" id="selectmenu3" name="" data-mini="true">
+                  <option value="0">
+                      Week 0
+                  </option>
+                  <option value="1">
+                      Week 1
+                  </option>
+                  <option value="2">
+                      Week 2
+                  </option>
+                  <option value="3">
+                      Week 3
+                  </option>
+                  <option value="4">
+                      Week 4
+                  </option>
+                  <option value="5">
+                      Week 5
+                  </option>
+                  <option value="6">
+                      Week 6
+                  </option>
+                  <option value="7">
+                      Week 7
+                  </option>
+                  <option value="8">
+                      Week 8
+                  </option>
+                  <option value="9">
+                      Week 9
+                  </option>
+                  <option value="10">
+                      Week 10
+                  </option>
+              </select>
+              <br />&nbsp;
+              <label for="selectmenu4">
+                  Choose Day:
+              </label>
+              <select onchange = "updateSwipes($('#selectmenu3').val(), $('#selectmenu4').val(), $('input:checked').val())" id="selectmenu4" name="" data-mini="true">
+                  <option value="1">
+                      Monday
+                  </option>
+                  <option value="2">
+                      Tuesday
+                  </option>
+                  <option value="3">
+                      Wednesday
+                  </option>
+                  <option value="4">
+                      Thursday
+                  </option>
+                  <option value="5">
+                      Friday
+                  </option>
+                  <option value="6">
+                      Saturday
+                  </option>
+                  <option value="7">
+                      Sunday
+                  </option>
+              </select>
+          </div>
+      </div>
+  </div>
+</body>
+</html>

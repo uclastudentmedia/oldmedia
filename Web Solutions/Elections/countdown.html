@@ -1,0 +1,127 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Countdown</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.1/jquery.mobile-1.4.1.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.1/jquery.mobile-1.4.1.min.js"></script>
+        <script type="text/javascript" src="js/jquery.flipcountdown.js"></script>
+        <link rel="stylesheet" type="text/css" href="js/jquery.flipcountdown.css" />
+        <style type="text/css">
+            /* CSS */ 
+        </style>
+        <script>
+            $(document).ready( function() {
+                var pollOpen = Math.round((new Date('4/27/2015 14:00:01')).getTime()/1000);
+                var pollClose = Math.round((new Date('5/01/2015 15:00:01')).getTime()/1000);
+                var winAnnounce = Math.round((new Date('5/01/2015 19:00:01')).getTime()/1000);
+                $('#flipcountdownbox1').flipcountdown({ 
+                    size:'sm',
+                    tick:function(){
+                        var nol = function(h){
+                            return h>9?h:'0'+h;
+                        }
+                        var range   =   pollOpen-Math.round((new Date()).getTime()/1000),
+                            secday  =   86400, sechour = 3600,
+                            days    =   parseInt(range/secday),
+                            hours   =   parseInt((range%secday)/sechour),
+                            min =   parseInt(((range%secday)%sechour)/60),
+                            sec =   ((range%secday)%sechour)%60;
+                        return nol(days)+' '+nol(hours)+' '+nol(min)+' '+nol(sec);
+                    }
+                });
+
+                $('#flipcountdownbox2').flipcountdown({ 
+                    size:'sm',
+                    tick:function(){
+                        var nol = function(h){
+                            return h>9?h:'0'+h;
+                        }
+                        var range   =   pollClose-Math.round((new Date()).getTime()/1000),
+                            secday  =   86400, sechour = 3600,
+                            days    =   parseInt(range/secday),
+                            hours   =   parseInt((range%secday)/sechour),
+                            min =   parseInt(((range%secday)%sechour)/60),
+                            sec =   ((range%secday)%sechour)%60;
+                        return nol(days)+' '+nol(hours)+' '+nol(min)+' '+nol(sec);
+                    }
+                });
+
+                $('#flipcountdownbox3').flipcountdown({ 
+                    size:'sm',
+                    tick:function(){
+                        var nol = function(h){
+                            return h>9?h:'0'+h;
+                        }
+                        var range   =   winAnnounce-Math.round((new Date()).getTime()/1000),
+                            secday  =   86400, sechour = 3600,
+                            days    =   parseInt(range/secday),
+                            hours   =   parseInt((range%secday)/sechour),
+                            min =   parseInt(((range%secday)%sechour)/60),
+                            sec =   ((range%secday)%sechour)%60;
+                        return nol(days)+' '+nol(hours)+' '+nol(min)+' '+nol(sec);
+                    }
+                });
+            });
+
+            // From StackOverflow
+            function appendZero(n){
+                return n > 9 ? "" + n: "0" + n;
+            }
+        </script>
+    </head>
+    <body>
+        <div data-role="content">
+            <div id="firstCount" align="center">
+                <h1 style="margin:0px">Polls Open In</h1>
+                <table id="pollsOpen" style="border:0px;">
+                    <tr>
+                        <td style="width:70px;text-align:left;"><strong style="padding-left:1.7em;">Days</strong></td>
+                        <td style="width:40px;text-align:left;"><strong style="padding-left:0em;">Hours</strong></td>
+                        <td style="width:55px;text-align:left;"><strong style="padding-left:0em;">Minutes</strong></td>
+                        <td style="width:120px;text-align:left;"><strong style="padding-left:0em;">Seconds</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4"><span style="padding-left:1.5em;"id="flipcountdownbox1"></span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div id="secondCount" align="center">
+                <h1 style="margin:0px">Polls Close In</h1>
+                <table id="pollsClose" style="border:0px">
+                    <tr>
+                        <td style="width:70px;text-align:left;"><strong style="padding-left:1.7em;">Days</strong></td>
+                        <td style="width:40px;text-align:left;"><strong style="padding-left:0em;">Hours</strong></td>
+                        <td style="width:55px;text-align:left;"><strong style="padding-left:0em;">Minutes</strong></td>
+                        <td style="width:120px;text-align:left;"><strong style="padding-left:0em;">Seconds</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4"><span style="padding-left:1.5em;"id="flipcountdownbox2"></span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div id="thirdCount" align="center">
+                <h1 style="margin:0px">Results In</h1>
+                <table id="pollsClose" style="border:0px">
+                    <tr>
+                        <td style="width:70px;text-align:left;"><strong style="padding-left:1.7em;">Days</strong></td>
+                        <td style="width:40px;text-align:left;"><strong style="padding-left:0em;">Hours</strong></td>
+                        <td style="width:55px;text-align:left;"><strong style="padding-left:0em;">Minutes</strong></td>
+                        <td style="width:120px;text-align:left;"><strong style="padding-left:0em;">Seconds</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4"><span style="padding-left:1.5em;"id="flipcountdownbox3"></span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>

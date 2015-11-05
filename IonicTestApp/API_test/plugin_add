@@ -1,0 +1,9 @@
+#!/bin/bash
+
+cordova plugin add https://github.com/danwilson/google-analytics-plugin.git
+cordova plugin add org.apache.cordova.file
+cordova plugin add org.apache.cordova.file-transfer
+cordova plugin add org.apache.cordova.inappbrowser
+cordova plugin add org.apache.cordova.network-information
+cordova plugin add https://github.com/EddyVerbruggen/Toast-PhoneGap-Plugin.git
+

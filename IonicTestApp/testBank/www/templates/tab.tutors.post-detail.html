@@ -1,0 +1,10 @@
+<ion-view>
+	<ion-nav-title>
+		{{post.title}}
+	</ion-nav-title>
+	<ion-content class="has-header padding">
+		<h2>{{post.title}}</h2>
+		<div ng-bind-html="post.content_html">
+		</div>
+	</ion-content>
+</ion-view>

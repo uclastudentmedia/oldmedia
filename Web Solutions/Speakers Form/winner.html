@@ -1,0 +1,83 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Contest Winner Selector</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+        <script src="js/jquery.flurry.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>
+        <style type="text/css">
+            /* CSS */ 
+        </style>
+        <script>
+
+            var entrants = ["Aabra Ahmed", "Aaron Newman", "Abdelbagi Gieballa", "Abigail Mejia", "Abigail Yirong Zhao", "Adriana Reyes", "Agata Troost", "Alex Katz", "Alexander Aabedi", "Alexander Julian", "Alexander Madrid", "Alexandra Beatty", "Alexandra Miller", "Alia Bakr", "Aline DeLuca", "Alison Guse", "Alison Mally", "Alison Petsod Hixson", "Allie Blanchette", "Amanda Lopez", "Ambar Pena", "Amber Yelisetty", "Ami Sachdev", "Amy Cummings", "Amy lam", "Ana Zepeda", "Anaika Miller", "Andrew Kwaning", "Andy Phung", "Angela Lowe", "Angelica Cervantes", "Angelica Krauss", "Anna Morelli", "Annabel Clarke", "Anne Schneider", "Annie Rimmon", "Annie Saetern", "Annie Shi", "Arabi Seshappan", "Areli Carreon", "Ariel Pezner", "Aris Hamparsoomi", "Ashen Parikh", "Ashley Lamhofer", "Ashley Louie", "Ashley Poole", "Athena Rodriguez", "Austin Blake", "Austin Hoang", "Bahjat Alirani", "Bailey Haines", "Baylin Dickinson", "Benjamin Chan", "Brandon Howard", "Brenna Gibbs", "Brian Romo", "Brittani Lash", "Caitlin Tassos", "Caitlin Tassos", "Caitlyn Young", "Candace Hansen", "Carlos Sanchez", "Carlos Silva", "Carly Messex", "Carol De Paz", "Casey Christensen", "Cassie Anglin", "Catherine Truong", "Catie Imbery", "Chanel Ng", "Chantal Rashtian", "Chantel Valdivieso", "Chelsea Saurer", "Christine Parker", "Christopher Yi", "Cindy Resendiz", "Cindy Tran", "Crystal Boceta", "Connie Huang", "Corbin Muraro", "Courtney Louie", "Cynthia Alvarado", "Dana Gieselman", "Daniel Leventhal", "Danielle van der Lelie", "Darya Shkipina", "David Kerns", "Dayanara Ramirez", "Deesha Tripathy", "Delaney Morris", "Deon Turner", "Derek Su", "Devin Tang", "Diana Garnica", "Diana Tapia", "Dianne Lumaquin", "Dina Dalessandro", "Divya Bhaskar", "Dominic Masi", "Dorsa Ansari", "Eamonn Wilson", "Eidah Hilo", "Elaine Lei", "Eldrin Masangkay", "Elijah Kravets", "Elisa Dumett", "Elise Peate", "Elizabeth Dao", "Elizabeth Dawson", "Elizabeth Kozlov", "Elizabeth Lopez", "Elizabeth Matusov", "Ellen Lawrence", "Elyse Frydendall", "Em Chang", "Emily Daura", "Emily Hanseler", "Emily Schoen", "Erik Zepeda-Flores", "Ernesto Martínez", "Esther Yoo", "Ethan Rao", "Etienne Leroux", "Etydria Cintora", "Fangjing Li", "Franklin Zhang", "Franklyn Bakala", "Gabriela Forter", "Gabriela Manevich", "Gardenia Cheung-Lau", "Gardenia Montero", "Georgina Morones", "Ghassan Hanhan", "Gilberto Luna", "Gina Campos", "Giovanni Pulido", "Giselle Abcarian", "Grace Waddell", "Gwenaelle Calais-Haase", "Hailey Miller", "Hanna Burge", "Hannah Ferrell", "Hannah Spero", "Haonan Ling", "Heesu Jang", "Hibah Ahmed", "Howard Xiao", "Hunter Laine", "Irene Jiang", "Isabel Bilotta", "Isabel Navarro", "Isabelle Chu", "Isis Iccillo", "Jackie Nguyen", "Jacqueline Salem", "Janina Lamoglia", "Jaquelyn Escobar", "Jasmine Flake", "Jasmine Lin", "Jasmine Varela", "Jason Naderi", "Jayleen Yen", "Jee Hyun (July) Lim", "Jeffery Patterson", "Jeffrey Ventura", "Jenna Grossinger", "Jenna Hoover", "Jenna Huang", "Jennifer Dutton", "Jennifer Juarez", "Jenny Ham", "Jesse Manzo", "Jessica Segura", "Jessica Tolentino", "Jessie Gold", "Jocelyn Sanchez", "Jodi Wofford", "Jor-el Briones", "Jordan Maydole", "Joshua Fruto", "Juan Llano", "Julia Feygelman", "Julia McCarthy", "Julia Raven", "Junyi Wang", "Justin Sherrill", "Justina Sotelo", "Justine Le", "Ka Pou (Phoebe) Lai", "Kaitlin Highstreet", "Karen Bryan", "Karishma Patel", "Karthik Ranganathan", "Katherine Chang", "Kathryn Cornford", "Kathryn Deffebach", "Kathy Fernandez", "Katia Diaz", "Katie Caruso", "Katie Chau", "Katie Johnson", "Kavita Patel", "Kayla Bozer", "Kayla Karimi", "Kayla Newcomer", "Kayla Svihovec", "Kelley Slone", "Kelly DiMarco", "Kelly Dinh", "Kelly Hosokawa", "Kelly Yeo", "Kevin Moore", "Kevin Wilde", "Keytiana Hempstead", "Khaliunaa Bayarsaikhan", "Kira Latham", "Kris Quan", "Kristin Choe", "Kristini Buchanan", "Kyle Hess", "Kyle Kearney", "Laura Dang", "Laura Sanabria", "Laurel White", "Lauren DeVaughn", "Lauren Payne", "Lauren Pfeffer", "Lauren Phinney", "Lea Hong", "Lee Nga Law", "Lesley Quinonez", "Lexie Ornelas", "Liao Ke", "Lisa OBrien", "Lujia Sun", "Luke Harmon-Vellotti", "Luke Higbee", "Mackenzie Greeley", "Mackenzie Malerstein", "Madeleine McComb", "Madison Craig", "Madison Tye", "Madisson Goorman", "Maggie Coleman-Levy", "Maggie Galle", "Maggie Huang", "Malika Kumar", "Mandy Diec", "Maria Morales", "MariaElena Medina", "Mariam Maghakyan", "Mariana Loureiro", "MarizenJoy Shelledy", "Martina Dorff", "Martinez Ernesto", "Mary Rodriguez-Gordon", "Maryam Noori", "Maryam Qamar", "Matthew Adams", "Matthew Spotnitz", "Max Ward", "May Claire La Plante", "Meghan Carvalho", "Melissa Hilaire", "Mersal Samimi", "Michael Martin", "Michael Morag", "Michael Shimada", "Michelle Preciado", "Michelle Ruiz", "Mihaela Pop", "Mila Abushmaies", "Miranda Lopez", "Molly Christ", "Molly Mann", "Morgan Sampson", "Mostafa El-Kalliny", "Nadia Tseng", "Naomi Chan", "Natalia Vargas", "Natalie Bouri", "Natalie Espinosa", "Natalie Wilson", "Natalie Wilson", "Navpreet Kaur", "Nayeung Lee", "Neelam Michalow", "Nicole Danesh", "Nicole Darvish", "Nicole Werking", "Nicole Bian", "Nicoline Cu", "Nikhil Saukhla", "Nikita Bhatnagar", "Nikita Zalevskiy", "Noam Grebler", "Noreima Angulo", "Omar Hassan", "Osvaldo Hidalgo Otamendi", "Paige Mac Millan", "Paniz Arab", "Pannawit Chanyarungrojn", "Parth Prashar", "Peipei Lyu", "Pranasha Shrestha", "Praptee Chowdhury", "Qianwen Sun", "Qinglin Bian", "Rachel kim", "Rachel koester", "Rachel Laing", "Rachel Ross", "Rachel Staub", "Rafael Moreno", "Ramin Talebi", "Rashi Singh", "Rebeca Molina", "Rebecca Lamden", "Rebecca Nevarez", "Rebecca Stark", "Rene Petersson", "Riann Sachiko", "Riley McGuire", "Rishika Singh", "Rohan Luhar", "Rosa Ruiz", "Royce Nitta", "Ruben Garcia", "Ryan Jones", "Saadia Nur", "Sabrina Adams", "Samantha Rooks", "Samuel Chiang", "Samvel Gevorkyan", "Samyukta Warrier", "Sanah Budhwani", "Sanjay Britto", "Sara Haas", "Sarah Leidenfrost", "Sarah Wyman", "Shanren Pan", "Sharon Villagran", "Sheeva Khoshkish", "Sheridan Bowers", "Shirley Kawafuchi", "Shreya Sreekantaswamy", "Shuo Wang", "Siqi Wang", "Sofia Finamore", "Soheil Kashani", "Sojeong Jun", "Sophia Dhillon", "Soz Mirza", "Stephanie Dus", "Stephanie farokhi", "Stephen Dam", "Steven Du", "Su Young Lee", "Suchawut Thamvorapon", "Suchun shi", "Susan Bisnoff", "Suzy Kim", "Tala Ahmadi", "Taylor Gleason", "Taylor Lewis", "Teresa Contreras", "Teresa maldonado", "Tess McIntyre", "Thao-Ann Nguyen", "Thien Dang", "Thomas Arndt", "Tiffany Luong", "Tiffany Majdipour", "Tina Phan", "Tira Okamoto", "Tsering Farber", "Tyler Langdon", "Tyler Toueg", "Vanessa Hernandez", "Vatche Gulesserian", "Veronica Holcomb", "Veronica Rosen", "Victor Vu", "Victoria Gonzalez", "Virginia Su", "Vishesh Anand", "William Jones", "Winly Ng", "Xinzhe Zheng", "Yi Yuan", "Yige Liu", "Yiwen Deng", "Yonatan Alon", "Yu Bi", "Yunie Chang", "Yvonne Dimagiba", "Zach Rosa", "Zexuan Li", "Zurich Espinoza"];
+
+            $(document).ready( function() {
+                $("#delay").hide();
+                $("#delay2").hide();
+                $("#winner1").hide();
+                $("#winner2").hide();
+                $("#winSelect2").parent().hide();
+                $("hr").hide();
+            });
+
+            var currStage = 0;
+
+            function randomWinner( num )
+            {
+                return entrants[ Math.floor( Math.random() * num )];
+            }
+
+            function selectWinners( stage )
+            {
+                switch(stage)
+                {
+                    case 0: 
+                        $("#delay").fadeIn('slow', function() {
+                            $("#winner1").text(randomWinner(399)).delay(400).fadeIn('slow', function() {
+                                $("#winSelect").parent().hide();
+                                $("#winSelect2").parent().show();
+                                $("#div1").show();
+                                currStage++; 
+                            });
+                        });
+
+                        break;
+
+                    case 1:
+                        $("#delay2").fadeIn('slow', function() {
+                            $("#winner2").text(randomWinner(399)).delay(400).fadeIn('slow', function() {
+                                $("#winSelect2").parent().hide();
+                                $("#div2").show();
+                                $().flurry({ height: 450, wind: 100, variance: 80, density: 5, large: 35, speed: 5000 });
+                            });
+                        });
+                        break;
+                }
+                
+            }
+        </script>
+    </head>
+    <body>
+        <div data-role="content">
+            <h1 id="delay">And our first winner is...</h1>
+            <h2 id="winner1"></h2>
+            <hr id="div1" style="height:3px; background-color:#ccc; border:5px; margin-top:5px; margin-bottom:0px;">
+            <h1 id="delay2">And our second winner is...</h1>
+            <h2 id="winner2"></h2>
+            <hr id="div2" style="height:3px; background-color:#ccc; border:5px; margin-top:5px; margin-bottom:0px;">
+            <br>&nbsp;</br>
+            <form>
+                <input onclick="selectWinners(currStage);" type="button" id="winSelect" value="Select Winner">
+                <input onclick="selectWinners(currStage);" type="button" id="winSelect2" value="Select Second Winner">
+            </form>
+        </div>
+    </body>
+</html>

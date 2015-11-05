@@ -1,0 +1,1251 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Front-Desk Checkout Form</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>
+        <script src="js/jquery.maskedinput.min.js" type="text/javascript"></script>
+        <script src="http://malsup.github.io/jquery.blockUI.js"></script> 
+        <style type="text/css">
+            .tablist-left {
+                width: 25%;
+                display: inline-block;
+            }
+            .tablist-content {
+                width: 60%;
+                display: inline-block;
+                vertical-align: top;
+                margin-left: 5%;
+            }
+        </style>
+        <script>
+            var myDataRef = new Firebase('https://uclastudentmedia.firebaseio.com/frontdesk');
+            var userRef = myDataRef.child('users');
+            var equipRef = myDataRef.child('equipment');
+            var staffRef = myDataRef.child('staff');
+
+            var currPartsList = new Array();
+            var userList = new Array();
+            var equipList = new Array();
+            var staffList = new Array();
+
+            $(document).ready( function() {
+                if( window.location.hash != "#h" )
+                {
+                    window.location = '#h';
+                    window.location.reload();
+                }
+
+                $("#inUPhone").mask("(999) 999-9999");
+                $("#currParts").parent().hide();
+                $("#cOutParts").hide();
+                $("#cInParts").hide();
+                $("#timeDialog").hide();
+
+                $.blockUI({ 
+                    message: null, 
+                });
+
+                myDataRef.once( 'value', function( dataSnapshot )
+                {
+                    var data = dataSnapshot.val();
+                    for ( var i in data['users'] )
+                    {
+                        userList.push( new User( data['users'][i]['uName'], data['users'][i]['uMail'], data['users'][i]['uPhone'], data['users'][i]['uDept'], i, data['users'][i]['sID'] ));
+                    }
+
+                    for ( var j in data['equipment'] )
+                    {
+                        var parsedEquip = new Equipment( data['equipment'][j]['eName'], data['equipment'][j]['eUName'], data['equipment'][j]['eUMail'], data['equipment'][j]['eTime'], data['equipment'][j]['eParts'], data['equipment'][j]['ePartsOut'], j, parseInt(data['equipment'][j]['authIndex']), data['equipment'][j]['comment'] );
+                        if ( parsedEquip.isCheckedOut())
+                        {
+                            parsedEquip.useCheckedParts( data['equipment'][j]['ePartsOut'] );
+                        }
+
+                        equipList.push( parsedEquip );
+                    }
+
+                    for ( var k in data['staff'] )
+                    {
+                        staffList.push( new Staff( data['staff'][k]['sName'], data['staff'][k]['stID'] ));
+                    }
+
+                    populateOutstanding();
+
+                    if ( $("#checkedOut").children().length > 0 )
+                        $("#checkedOut").parent().parent().collapsible('expand');
+
+                    updateLists();
+                    populateNewUsers();
+                    populateEquip();
+
+                    $.unblockUI();
+                });
+            });
+
+            // Event Handlers
+            $( document ).on( "tap", '#submit', function()
+            { 
+                submitUser( $("#inUName").val(), $("#inUEmail").val(), $("#inUPhone").val(), $("#inUDept").val(), $("#inUSID").val() );  
+                $("#inUName").val("");
+                $("#inUEmail").val("");
+                $("#inUPhone").val("");
+                $("#inUDept").val("");
+                $("#inUSID").val("");
+            });
+
+            $( document ).on( "tap", '#deleteUser', function()
+            { 
+                if( confirm("Warning! You are about to delete " + userList[parseInt($("#delSelUser").val())]['uName'] + ". Continue?" ) )
+                {
+                    deleteUser(userList[parseInt($("#delSelUser").val())]['uKey']);
+                }
+            });
+
+            $( document ).on( "tap", '#deleteEquip', function()
+            { 
+                if( confirm("Warning! You are about to delete " + equipList[parseInt($("#delSelEquip").val())]['eName'] + ". Continue?" ) )
+                {
+                    deleteEquip(equipList[parseInt($("#delSelEquip").val())]['eKey']);
+                }
+            });
+
+            $( document ).on( "tap", '#editSubmit', function()
+            { 
+                updateUser( $("#einUName").val(), $("#einUEmail").val(), $("#einUPhone").val(), $("#einUDept").val(), $("#einUSID").val(), userList[parseInt($("#selectUser").val())]['uKey'] );
+            });
+
+            $( document ).on( "tap", '#submitEquip', function()
+            {
+                submitEquipment( $("#inEName").val() ); 
+                for ( var i = 0; i < currPartsList.length; i )
+                {
+                    removeComponent( currPartsList[i] );
+                }
+                $("#inEName").val("");
+            });
+
+            $( document ).on( "tap", '#updateEquip', function()
+            {
+                updateEquipment( $("#einEName").val(), $("#eComment").val(), equipList[parseInt($("#selectEquip").val())]['eKey'] );
+            });
+
+            $( document ).on( "tap", '#addPartButton', function()
+            { 
+                $("#currParts").parent().show();
+                addComponent( $("#inParts").val() );
+                $("#inParts").val("");
+            });
+
+            $( document ).on( "tap", '#editPartButton', function()
+            { 
+                $("#ecurrParts").parent().show();
+                addEComponent( $("#einParts").val() );
+                $("#einParts").val("");
+            });
+
+            $( document ).on( "tap", "#cInSubmit", function() 
+            {
+                checkEquipIn( $("#checkInList").val() );
+            });
+
+            $( document ).on( "tap", "#cOutSubmit", function() 
+            {
+                if ( userList[0].isValidID( $("#cOutID").val() ) == false )
+                {
+                    alert("This student ID is invalid!");
+                    return;
+                }
+
+                checkEquipOut( $("#checkOutList").val(), getUserIndex( $("#cOutID").val() ));
+            });
+
+            $( document ).on( "change", '#checkInList', function()
+            {
+                if ( $("#checkInList").val() != "" )
+                {
+                    updateCheckInNameList( $("#checkInList").val() );
+                }
+                else
+                {
+                    $("#cInName").find("option").remove().end();
+                    $("#cInName").append('<option value="">Select Equipment</option>');
+                    $("#cInName").append('<option value="" disabled="disabled">---------------</option>');
+                }
+                $("#cInName").selectmenu('refresh', true);
+                populateParts( $("#checkInList").val(), 1 );
+            });
+
+            $( document ).on( "change", '#checkOutList', function()
+            {
+                populateParts( $("#checkOutList").val(), 0 );
+            });
+
+            // Assorted Functions
+            function submitUser( name, mail, phone, dept, studentID )
+            {
+                if ( name == "" || mail == "" || phone == "" || dept == "" || studentID == "" )
+                {
+                    alert("Please complete the form!");
+                }
+                else
+                {
+                    userRef.push( {uName: name, uMail: mail, uPhone: phone, uDept: dept, sID: studentID }, function() { 
+                        alert("User submitted successfully!");
+                        window.location.reload()
+                    });
+                }
+            }
+
+            function deleteUser( key )
+            {
+                userRef.child(key).remove( function() {
+                    alert("User deleted!");
+                    window.location.reload();
+                });
+            }
+
+            function deleteEquip( key )
+            {
+                equipRef.child(key).remove( function() {
+                    alert("Equipment deleted!");
+                    window.location.reload();
+                });
+            }
+
+            function updateUser( name, mail, phone, dept, studentID, key )
+            {
+                userRef.child(key).set({uName: name, uMail: mail, uPhone: phone, uDept: dept, sID: studentID }, function() { 
+                        alert("User updated successfully!");
+                        window.location.reload()
+                    });
+            }
+
+            function updateEquipment( name, comment, key )
+            {
+                equipRef.child(key).update( {eName: name, eParts: ecurrPartsList, ePartsOut: ecurrIndices, comment: comment }, function() { 
+                    alert("Equipment updated successfully!");
+                    window.location.reload()
+                });
+            }
+
+            function submitStaff( name, id )
+            {
+                staffRef.push( {sName: name, stID: id} );
+            }
+
+            function submitEquipment( name )
+            {
+                if ( name == "" )
+                {
+                    alert("Please complete the form!");
+                }
+                else
+                {
+                    equipRef.push( {eName: name, eUName: "", eUMail: "", eTime: $.now(), eParts: currPartsList, ePartsOut: new Array().repeat( 1, currPartsList.length ), authIndex: -1, comment: "" }, function() { 
+                        alert("Equipment added successfully!");
+                        window.location.reload()
+                    });
+                }
+            }
+
+            function addComponent( part )
+            {
+                if ( currPartsList.length == 0 ) // first element
+                {
+                    $("#currParts").append('<li data-role="list-divider" data-split-icon="delete" data-split-theme="a" data-inset="true">Current Parts</li>');
+                }
+                $("#currParts").append('<li id="' + sClean( part ) + '"><a href="#">' + part + '</a><a href="#" onclick="removeComponent(&#39;' + part + '&#39;);" data-icon="delete" data-rel="popup" data-position-to="window" data-transition="pop"></a></li>');
+                currPartsList.push( part );
+                $("#currParts").listview('refresh');
+            }
+
+            var ecurrPartsList = new Array();
+
+            function addEComponent( part )
+            {
+                if ( ecurrPartsList.length == 0 ) // first element
+                {
+                    $("#ecurrParts").append('<li data-role="list-divider" data-split-icon="delete" data-split-theme="a" data-inset="true">Current Parts</li>');
+                }
+                $("#ecurrParts").append('<li id="' + sClean( part ) + '"><a href="#">' + part + '</a><a href="#" onclick="removeEComponent(&#39;' + part + '&#39;);" data-icon="delete" data-rel="popup" data-position-to="window" data-transition="pop"></a></li>');
+                ecurrPartsList.push( part );
+                $("#ecurrParts").listview('refresh');
+                ecurrIndices.push(1);
+            }
+
+            var ecurrIndices = new Array();
+
+            function removeEComponent( part )
+            {
+                if ( ecurrPartsList.length <= 1 )
+                {
+                    $("#" + sClean(part)).siblings().remove();
+                    $("#ecurrParts").parent().hide();
+                }
+
+                $("#" + sClean(part)).remove();
+                $("#ecurrParts").listview('refresh');
+
+                ecurrIndices.splice( ecurrPartsList.indexOf( part ), 1 );
+                ecurrPartsList.splice( ecurrPartsList.indexOf( part ), 1 );
+            }
+
+            function removeComponent( part )
+            {
+                if ( currPartsList.length <= 1 )
+                {
+                    $("#" + sClean(part)).siblings().remove();
+                    $("#currParts").parent().hide();
+                }
+
+                $("#" + sClean(part)).remove();
+                $("#currParts").listview('refresh');
+                currPartsList.splice( currPartsList.indexOf( part ), 1 );
+            }
+
+            function sClean( string )
+            {
+                return string.replace(/\s+/g, '');
+            }
+
+            function populateOutstanding()
+            {
+                for ( var i = 0; i < equipList.length; i++ )
+                {
+                    if ( equipList[i].isCheckedOut() )
+                        $("#checkedOut").append('<li><a onclick="updateEquipInfo(' + i + ')" href="#equipInfo">' + equipList[i].geteName() + '</a></li>');
+                    else
+                        $("#notCheckedOut").append('<li><a onclick="updateEquipInfo(' + i + ')" href="#equipInfo">' + equipList[i].geteName() + '</a></li>');
+                }
+
+                $("#checkedOut").listview('refresh');
+                $("#notCheckedOut").listview('refresh');
+            }
+
+            function parseTimeDifference( oldTime )
+            {
+                var difference = parseInt( $.now() ) - parseInt( oldTime );
+                
+                if ( difference < 5000 )
+                {
+                    return "just now";
+                }
+                else if ( difference >= 5000 && difference < 60000 )
+                {
+                    return Math.round( difference/1000 ) + " seconds ago";
+                }
+                else if ( difference >= 60000 && difference < 3600000 )
+                {
+                    return Math.round( difference/60000 ) + " minutes ago";
+                }
+                else if ( difference >= 3600000 && difference < 86400000 )
+                {
+                    return Math.round ( difference/3600000 ) + " hours ago";
+                }
+                else if ( difference >= 86400000 && difference < 604800000 )
+                {
+                    return Math.round ( difference/86400000 ) + " days ago";
+                }
+                else if ( difference >= 604800000 )
+                {
+                    return Math.round ( difference/604800000 ) + " weeks ago";
+                }
+            }
+
+            function updateEquipInfo( id )
+            {
+                $("#checkName").text( equipList[id].geteName() );
+                if ( equipList[id].isCheckedOut() )
+                {
+                    $("#checkStatus").text(' checked out').css('color', 'red');
+                    $("#additionalName").text(' by ' + equipList[id].geteUName());
+                    $("#deleteLink").show();
+                    $("#deleteLink").children().attr("href", 'mailto:' + equipList[id].geteUMail() + '?subject=Reminder:%20item%20checked%20out&body=This%20is%20a%20reminder%20that%20you%20have%20an%20item%20checked%20out.');
+                    $("#timeDialog").show();
+                    $("#outDate").text( new Date(equipList[id].geteTime() ).toLocaleString() );
+                    $("#authName").text( "Check-out authorized by " + staffList[equipList[id].getAuthIndex()].getsName() );
+                    // $("#mPartsDialogList").parent().hide();
+                }
+                else
+                {
+                    $("#checkStatus").text(' in stock').css('color', 'green');
+                    $("#deleteLink").hide();
+                    $("#additionalName").text("");
+                    if ( equipList[id].getAuthIndex() == -1 )
+                        $("#authName").text( "This equipment has never been checked out" );     
+                    else
+                        $("#authName").text( "Last check-in authorized by " + staffList[equipList[id].getAuthIndex()].getsName() );
+
+                    /*
+                    $("#mPartsDialogList").parent().show();
+                    $("#mPartsDialogList").empty();
+                    if ( !equipList[0].noMissingParts() )
+                    {
+                        $("#mPartsDialogList").append('<li data-role="list-divider" data-split-icon="delete" data-split-theme="a" data-inset="true">Missing Parts</li>');
+
+                        for ( var i = 0; i < equipList[id].geteParts(); i++ )
+                            ( equipList[id].isPartChecked(i) ) ? $("#mPartsDialogList").append("<li>" + equipList[id].geteParts()[i] + "</li>") : console.log("No push");
+                    }*/
+                }
+
+                $("#partsDialogList").empty();
+
+                for ( var i = 0; i < equipList[id].geteParts().length; i++ )
+                {
+                    if ( i == 0 )
+                        $("#partsDialogList").append('<li data-role="list-divider" data-split-icon="delete" data-split-theme="a" data-inset="true">List of Parts</li>');
+
+                    if ( ( !equipList[id].isCheckedOut() && equipList[id]['ePartsOut'][i] == 2 || equipList[id]['ePartsOut'][i] == 1 ) )
+                    {
+                        $("#partsDialogList").append('<li>' + equipList[id].geteParts()[i] + '</li>');
+                    }
+                    else if ( equipList[id].isCheckedOut() )
+                        $("#partsDialogList").append('<li>' + equipList[id].geteParts()[i] + '</li>');
+                }
+
+                if( equipList[id].getComments() != "" )
+                {
+                    $("#commentBox").show();
+                    $("#comBox").text( equipList[id].getComments() );
+                }
+                else
+                    $("#commentBox").hide();
+
+                $("#partsDialogList").listview().listview('refresh');
+
+            }
+
+            function updateLists()
+            {
+                for ( var i = 0; i < equipList.length; i++ )
+                {
+                    if ( equipList[i].isCheckedOut() )
+                        $("#checkInList").append('<option value="' + i + '">' + equipList[i].geteName() + '</option>');
+                    else
+                        $("#checkOutList").append('<option value="' + i + '">' + equipList[i].geteName() + '</option>');
+                }
+
+                for ( var j = 0; j < userList.length; j++ )
+                {
+                    $("#cOutName").append('<option value="' + j + '">' + userList[j].getuName() + '</option>');
+                }
+            }
+
+            function updateCheckInNameList( index )
+            {
+                $("#cInName").find("option").remove().end();
+                $("#cInName").append('<option value="' + equipList[index].geteUName() + '" selected="selected">' + equipList[index].geteUName() + '</option>');
+
+                $("#cInComment").text( equipList[index].getComments() );
+            }
+
+            function checkOutFirebase( equipIndex, userIndex, staffIndex )
+            {
+                var outArray = new Array();
+
+                for ( var i = 0; i < $("[name='cOutBox']").length; i++ )
+                {
+                    ( $("[name='cOutBox']")[i].checked == true ) ? outArray.push(1) : outArray.push(0);
+                }
+
+                equipRef.child( equipList[equipIndex].geteKey() ).update({ePartsOut: outArray, eTime: $.now(), eUMail: userList[userIndex].getuEmail(), eUName: userList[userIndex].getuName(), authIndex: parseInt(staffIndex), comment: $("#cOutComment").val() }, function() { 
+                            alert("Equipment successfully checked out!");
+                            window.location.reload();
+                        });
+            }
+
+            function checkInFirebase( equipIndex, staffIndex )
+            {
+                var inArray = new Array();
+                var counter = 0;
+
+                for ( var i = 0; i < equipList[equipIndex].getePartsOut().length; i++ )
+                {
+                    if ( equipList[equipIndex].getePartsOut()[i] == 0 )
+                    {
+                        inArray.push(1);
+                        continue;
+                    }
+
+                    ( $("[name='cInBox']")[counter].checked == true ) ? inArray.push(1) : inArray.push(0);
+                    counter++;
+                }
+
+                equipRef.child( equipList[equipIndex].geteKey() ).update({ePartsOut: inArray, eUName: "", eUMail: "", authIndex: parseInt(staffIndex), comment: $("#cInComment").val() }, function() { 
+                        alert("Equipment successfully checked in!");
+                        window.location.reload();
+                    });
+            }
+
+            function checkInFirebasePartial( equipIndex, staffIndex )
+            {
+                var inArray = new Array();
+
+                for ( var i = 0; i < equipList[equipIndex].getePartsOut().length; i++ )
+                {
+                    if ( equipList[equipIndex].getePartsOut()[i] == 0 )
+                        continue;
+                    
+                    ( $("[name='cInBox']")[i].checked == true ) ? inArray.push(0) : inArray.push(2);
+                }
+
+                equipRef.child( equipList[equipIndex].geteKey() ).update({ePartsOut: inArray, authIndex: parseInt(staffIndex), comment: $("#cInComment").val() }, function() { 
+                        alert("Parts successfully checked in!");
+                        window.location.reload();
+                    });
+            }
+
+            function checkEquipOut( equipIndex, userIndex )
+            {
+                if ( equipIndex == "" || userIndex == "" )
+                {
+                    alert("Please make your selection!");
+                    return;
+                }
+
+                var verified = false;
+                var staffIndex = -1;
+                for ( var i in staffList )
+                {
+                    if ( staffList[i].getstID() == parseInt($("#cFrontIDOut").val()) )
+                    {
+                        verified = true;
+                        staffIndex = i;
+                        break;
+                    }
+                }
+
+                if ( !verified )
+                    alert("Incorrect authorization ID!");
+                else
+                {
+                    if ( $("[name='cOutBox']:checked").length != equipList[$("#checkOutList").val()].geteParts().length )
+                    {
+                        var missingItems = new Array();
+                        for ( var i = 0; i < $("[name='cOutBox']:not(:checked)").length; i++ )
+                        {
+                            missingItems.push( $("[name='cOutBox']:not(:checked)")[i].value );
+                        }
+
+                        $("#missingList").empty();
+                        for ( var j = 0; j < missingItems.length; j++ )
+                        {
+                            $("#missingList").append("<li>" + missingItems[j] + "</li>");
+                        }
+                        //$("#missingList").listview('refresh');
+
+                        $("#missingContinue").attr("onclick", "checkOutFirebase( $('#checkOutList').val(), getUserIndex( $('#cOutID').val() ), " + staffIndex + " );" );
+
+                        window.location.href = "#missingPartsDialog";
+                    }
+                    else
+                    {
+                        checkOutFirebase( equipIndex, userIndex, staffIndex );
+                    }
+                }
+            }
+
+            function checkEquipIn( equipIndex )
+            {
+                var verified = false;
+                var staffIndex = -1;
+                for ( var i in staffList )
+                {
+                    if ( staffList[i].getstID() == parseInt($("#cFrontIDIn").val()) )
+                    {
+                        verified = true;
+                        staffIndex = i;
+                        break;
+                    }
+                }
+
+                if ( !verified )
+                    alert("Incorrect authorization ID!");
+                else
+                {
+                    /*
+                    var inArray = new Array();
+
+                    for ( var i = 0; i < $("[name='cInBox']").length; i++ )
+                    {
+                        ( $("[name='cInBox']")[i].checked == true ) ? inArray.push(1) : inArray.push(0);
+                    }
+                    */
+                    if ( $("[name='cInBox']:checked").length != equipList[$("#checkInList").val()].geteParts().length )
+                    {
+                        var missingItems = new Array();
+                        for ( var i = 0; i < $("[name='cInBox']:not(:checked)").length; i++ )
+                        {
+                            missingItems.push( $("[name='cInBox']:not(:checked)")[i].value );
+                        }
+
+                        $("#missingList").empty();
+                        for ( var j = 0; j < missingItems.length; j++ )
+                        {
+                            $("#missingList").append("<li>" + missingItems[j] + "</li>");
+                        }
+                        //$("#missingList").listview('refresh');
+
+                        $("#missingContinue").attr("onclick", "checkInFirebasePartial( $('#checkInList').val(), " + staffIndex + " );" );
+
+                        window.location.href = "#missingPartsDialog";
+                    }
+                    else
+                    {
+                        checkInFirebase( equipIndex, staffIndex );
+                    }
+                }
+            }
+
+            function getUserIndex( id )
+            {
+                for ( var i in userList )
+                {
+                    if ( userList[i].getsID() == id )
+                    {
+                        return i;
+                    }
+                }
+
+                return -1;
+            }
+
+            function populateEquip()
+            {
+                for( var i = 0; i < equipList.length; i++ )
+                {
+                    $("#selectEquip").append("<option value='" + i + "'>" + equipList[i]['eName'] + '</option>');
+                    $("#delSelEquip").append("<option value='" + i + "'>" + equipList[i]['eName'] + '</option>');
+                }
+                $("#selectEquip").selectmenu('refresh');
+            }
+
+            function populateNewUsers() 
+            {
+                for( var i = 0; i < userList.length; i++ )
+                {
+                    $("#selectUser").append("<option value='" + i + "'>" + userList[i]['uName'] + '</option>');
+                    $("#delSelUser").append("<option value='" + i + "'>" + userList[i]['uName'] + '</option>');
+                }
+                $("#selectUser").selectmenu('refresh');
+            }
+
+            function fillInfo( i )
+            {
+                $("#einUName").val( userList[i]['uName'] );
+                $("#einUPhone").val( userList[i]['uPhone'] );
+                $("#einUDept").val( userList[i]['uDept'] );
+                $("#einUEmail").val( userList[i]['uEmail'] );
+                $("#einUSID").val( userList[i]['sID'] );
+
+                $("#einUDept").selectmenu('refresh');
+            }
+
+            function fillEquip( i )
+            {
+                var parts = equipList[i]['eParts'];
+                $("#einEName").val( equipList[i]['eName'] );
+                $("#eComment").val( equipList[i]['comment'] );
+                $("#ecurrParts").empty();
+                ecurrPartsList.length = 0;
+                for( var j = 0; j < parts.length; j++ )
+                {
+                    addEComponent(parts[j]);
+                }
+                ecurrIndices = equipList[i]['ePartsOut'];
+            }
+
+            function populateParts( equipID, side )
+            {
+                switch ( side )
+                {
+                    case 0:
+                        $("#cOutPartsAttach").empty();
+                        $("#cOutParts").hide();
+                        var appendString = "<fieldset id='cOutPartsAttachSet' data-role='controlgroup'><legend>Parts:</legend>";
+                        for ( var i = 0; i < equipList[equipID].geteParts().length; i++ )
+                        {
+                            appendString += '<input type="checkbox" name="cOutBox" id="cOutBox' + i + '" value="' + equipList[equipID].geteParts()[i] + '">';
+                            appendString += '<label for="cOutBox' + i + '">' + equipList[equipID].geteParts()[i] + '</label>';
+                        }
+                        appendString +="</fieldset>";
+                        $("#cOutPartsAttach").append(appendString);
+
+                        if ( $("#cOutParts").children().length > 0 )
+                        {
+                            $("#cOutParts").show();
+                            $("#cOutPartsAttach").trigger('create');    
+                        }
+                        break;
+                        
+                    case 1:
+                        $("#cInPartsAttach").empty();
+                        $("#cInParts").hide();
+                        var appendString = "<fieldset id='cInPartsAttachSet' data-role='controlgroup'><legend>Parts:</legend>";
+                        for ( var i = 0; i < equipList[equipID].geteParts().length; i++ )
+                        {
+                            appendString += '<input type="checkbox" name="cInBox" id="cInBox' + i + '" value="' + equipList[equipID].geteParts()[i] + '">';
+                            appendString += '<label for="cInBox' + i + '">' + equipList[equipID].geteParts()[i] + '</label>';
+                        }
+                        appendString +="</fieldset>";
+                        $("#cInPartsAttach").append(appendString);
+
+                        if ( $("#cInParts").children().length > 0 )
+                        {
+                            $("#cInParts").show();
+                            $("#cInPartsAttach").trigger('create');
+                        }
+                        break;
+                }
+                
+                //$("input:checkbox").checkboxradio().checkboxradio('refresh');
+            }
+
+            // User Class
+            function User( uName, uEmail, uPhone, uDept, uKey, sID )
+            {
+                this.uName = uName;
+                this.uEmail = uEmail;
+                this.uPhone = uPhone;
+                this.uDept = uDept;
+                this.uKey = uKey;
+                this.sID = sID;
+            }
+
+            User.prototype.uName = "";
+            User.prototype.uEmail = "";
+            User.prototype.uPhone = "";
+            User.prototype.uDept = "";
+            User.prototype.uKey = "";
+            User.prototype.sID = 0;
+
+            User.prototype.getuName = function()
+            {
+                return this.uName;
+            }
+
+            User.prototype.getuEmail = function()
+            {
+                return this.uEmail;
+            }
+
+            User.prototype.getuPhone = function()
+            {
+                return this.uPhone;
+            }
+
+            User.prototype.getuDept = function()
+            {
+                return this.uDept;
+            }
+
+            User.prototype.getuKey = function()
+            {
+                return this.uKey;
+            }
+
+            User.prototype.getsID = function()
+            {
+                return this.sID;
+            }
+
+            User.prototype.isValidID = function( id )
+            {
+                for ( var i = 0; i < userList.length; i++ )
+                {
+                    if ( userList[i].getsID() == id )
+                        return true;
+                }
+                return false;
+            }
+
+            // Staff Class
+            function Staff( sName, stID )
+            {
+                this.sName = sName;
+                this.stID = stID;
+            }
+
+            Staff.prototype.sName = "";
+            Staff.prototype.stID = 0;
+
+            Staff.prototype.getsName = function()
+            {
+                return this.sName;
+            }
+
+            Staff.prototype.getstID = function()
+            {
+                return parseInt(this.stID);
+            }
+
+            Staff.prototype.returnName = function( id )
+            {
+                for ( var i in staffList )
+                {
+                    if ( staffList[i].getstID() == id )
+                    {
+                        return staffList[i].getsName();
+                    }
+                }
+
+                return "";
+            }
+
+            // Equipment Class
+            function Equipment( eName, eUName, eUMail, eTime, eParts, ePartsOut, eKey, authIndex, comment )
+            {
+                this.eName = eName;
+                this.eUName = eUName;
+                this.eUMail = eUMail;
+                this.eTime = eTime;
+                this.eParts = eParts;
+                this.ePartsOut = ePartsOut;
+                this.eKey = eKey;
+                this.authIndex = authIndex;
+                this.comment = comment;
+            }
+
+            Equipment.prototype.eName = "";
+            Equipment.prototype.eUName = "";
+            Equipment.prototype.eUMail = "";
+            Equipment.prototype.eTime = 0;
+            Equipment.prototype.eKey = "";
+            Equipment.prototype.authIndex = 0;
+            Equipment.prototype.eParts = new Array();
+            Equipment.prototype.ePartsOut = new Array();
+            Equipment.prototype.comment = "";
+
+            Equipment.prototype.geteName = function()
+            {
+                return this.eName;
+            }
+
+            Equipment.prototype.geteUName = function()
+            {
+                return this.eUName;
+            }
+
+            Equipment.prototype.getAuthIndex = function()
+            {
+                return this.authIndex;
+            }
+
+            Equipment.prototype.geteUMail = function()
+            {
+                return this.eUMail;
+            }
+
+            Equipment.prototype.geteTime = function()
+            {
+                return this.eTime;
+            }
+
+            Equipment.prototype.geteParts = function()
+            {
+                return this.eParts;
+            }
+
+            Equipment.prototype.getePartsOut = function()
+            {
+                return this.ePartsOut;
+            }
+
+            Equipment.prototype.noMissingParts = function()
+            {
+                return this.ePartsOut.indexOf(0) == -1;
+            }
+
+            Equipment.prototype.isPartChecked = function( index )
+            {
+                return this.ePartsOut[index];
+            }
+
+            Equipment.prototype.getComments = function()
+            {
+                return this.comment;
+            }
+
+            Equipment.prototype.useCheckedParts = function( newParts )
+            {
+                var tempArray = new Array();
+                for( var i = 0; i < newParts.length; i++ )
+                {
+                    if ( newParts[i] )
+                    {
+                        tempArray.push( this.eParts[i] );
+                    }
+                }
+                this.eParts = tempArray;
+            }
+
+            Equipment.prototype.geteKey = function()
+            {
+                return this.eKey;
+            }
+
+            Equipment.prototype.isCheckedOut = function()
+            {
+                return !(this.eUName == "" && this.eUMail == "");
+            }
+
+            // "Borrowed" code
+            Array.prototype.repeat= function(what, L){
+                while(L) this[--L]= what;
+                return this;
+            }
+
+        </script>
+    </head>
+    <body>
+        <div data-role="page" data-control-title="Home" id="loaded">
+            <div data-role="content" style="margin-left:5%;margin-right:5%">
+                <h1>Front Desk Checkout</h1>
+                <div data-role="tabs">
+                    <ul data-role="listview" data-inset="true" class="tablist-left">
+                      <li><a href="#one" data-ajax="false">Outstanding Items</a></li>
+                      <li><a href="#two" data-ajax="false">Add User/Equipment</a></li>
+                      <li><a href="#three" data-ajax="false">Check-Out/Check-In</a></li>
+                      <li><a href="#four" data-ajax="false">Edit/Remove Items</a></li>
+                    </ul>
+                    <div id="one" class="ui-body-d tablist-content">
+                        <div data-role="collapsible" data-collapsed="true">
+                            <h4>Items Checked Out</h4>
+                            <ul id="checkedOut" data-role="listview">
+                            </ul>
+                        </div>
+                        <div data-role="collapsible" data-collapsed="true">
+                            <h4>Items Not Checked Out</h4>
+                            <ul id="notCheckedOut" data-role="listview">
+                            </ul>
+                        </div>
+                    </div>
+                    <div id="two" class="ui-body-d tablist-content">
+                        <div data-role="collapsible" data-collapsed="false">
+                            <h4>Add User</h4>
+                            <ul data-role="listview" data-inset="false">
+                                <li class="ui-field-contain">
+                                    <label for="inUName">Name:</label>
+                                    <input type="text" id="inUName" placeholder="Enter Name..." value="">
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="inUName">Email:</label>
+                                    <input type="text" id="inUEmail" placeholder="Enter Email..." value="">
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="inUPhone">Phone:</label>
+                                    <input type="text" id="inUPhone" placeholder="Enter Phone..." value="">
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="inUSID">Student ID:</label>
+                                    <input type="number" id="inUSID" placeholder="Enter Student ID..." value="">
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="inUDept">Department:</label>
+                                    <select id="inUDept" data-mini="true">
+                                        <option value="">Department</option>
+                                        <option value="" disabled="disabled">---------------</option>
+                                        <option value="Daily Bruin">Daily Bruin</option>
+                                        <option value="DB Online">DB Online</option>
+                                        <option value="DB Video">DB Video</option>
+                                        <option value="UCLA Radio">UCLA Radio</option>
+                                        <option value="BruinLife">BruinLife</option>
+                                        <option value="Bruin Media Group">Bruin Media Group</option>
+                                        <option value="OutWrite">OutWrite</option>
+                                        <option value="FEM">FEM</option>
+                                        <option value="Nommo">Nommo</option>
+                                        <option value="Pacific Ties">Pacific Ties</option>
+                                        <option value="La Gente">La Gente</option>
+                                        <option value="Ha'Am">Ha'Am</option>
+                                        <option value="Al-Talib">Al-Talib</option>
+                                    </select>
+                                </li>
+                                <li class="ui-field-contain">
+                                    <a href="#" id="submit" text-align="center" class="ui-btn">Submit</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <br />
+                        <div data-role="collapsible" data-collapsed="false">
+                            <h4>Add Equipment</h4>
+                            <ul data-role="listview" data-inset="false">
+                                <li class="ui-field-contain">
+                                    <label for="inEName">Equipment Name:</label>
+                                    <input type="text" id="inEName" placeholder="Enter Equipment Name..." value="">
+                                </li>
+                                <li data-role="list-divider">Parts</li>
+                                <li class="ui-field-contain">
+                                    <label for="inParts">Add Part:</label>
+                                    <input type="text" id="inParts" placeholder="Enter Part..." value="">
+                                    <button id="addPartButton" align="left" class="ui-btn ui-btn-inline">Add Part</button>
+                                </li>
+                                <li class="ui-field-contain">  
+                                    <ul data-role="listview" id="currParts" data-inset="true">
+                                    </ul>
+                                </li>
+                                <li class="ui-field-contain">
+                                    <a href="#" id="submitEquip" text-align="center" class="ui-btn">Submit</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div id="three" class="ui-body-d tablist-content">
+                        <div data-role="collapsible" data-collapsed="true">
+                            <h4>Check-Out</h4>
+                            <ul data-role="listview" data-inset="false">
+                                <li class="ui-field-contain">
+                                    <label for="checkOutList">Currently In:</label>
+                                    <select id="checkOutList" data-mini="true">
+                                        <option value="">Equipment Currently In</option>
+                                        <option value="" disabled="disabled">---------------</option>
+                                    </select>
+                                </li>
+                                <li class="ui-field-contain">
+                                    <!-- Stuff -->
+                                    <label for="cOutID">Student ID:</label>
+                                    <input type="number" id="cOutID" placeholder="Enter Student ID..." value="">
+                                </li>
+                                <li id="cOutParts" class="ui-field-contain">
+                                    <form id="cOutPartsAttach">
+                                    </form>
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="cFrontID">Staff Authorization:</label>
+                                    <input type="password" id="cFrontIDOut" placeholder="Enter Staff ID..." value="">
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="cOutComment">Comments:</label>
+                                    <textarea id="cOutComment" placeholder="Enter any comments here..." value=""></textarea>
+                                </li>
+                                <li class="ui-field-contain">
+                                    <a href="#" id="cOutSubmit" text-align="center" class="ui-btn">Submit</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div data-role="collapsible" data-collapsed="true">
+                            <h4>Check-In</h4>
+                            <ul data-role="listview" data-inset="false">
+                                <li class="ui-field-contain">
+                                    <label for="checkInList">Currently Out:</label>
+                                    <select id="checkInList" data-mini="true">
+                                        <option value="">Equipment Currently Out</option>
+                                        <option value="" disabled="disabled">---------------</option>
+                                    </select>
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="cInName">Name:</label>
+                                    <select id="cInName" data-mini="true">
+                                        <option value="">Select Equipment</option>
+                                        <option value="" disabled="disabled">---------------</option>
+                                    </select>
+                                </li>
+                                <li id="cInParts" class="ui-field-contain">
+                                    <form id="cInPartsAttach">
+                                    </form>
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="cFrontIDIn">Staff Authorization:</label>
+                                    <input type="password" id="cFrontIDIn" placeholder="Enter Staff ID..." value="">
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="cInComment">Comments:</label>
+                                    <textarea id="cInComment" placeholder="Enter any comments here..." value=""></textarea>
+                                </li>
+                                <li class="ui-field-contain">
+                                    <a href="#" id="cInSubmit" text-align="center" class="ui-btn">Submit</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="four" class="ui-body-d tablist-content">
+                        <div data-role="collapsible" data-collapsed="true">
+                            <h4>Edit User</h4>
+                            <ul data-role="listview" data-inset="false">
+                                <li class="ui-field-contain">
+                                    <label for="selectUser">User:</label>
+                                    <select id="selectUser" data-mini="true" onchange="fillInfo(parseInt($('#selectUser').val()));">
+                                        <option value="">User Name</option>
+                                        <option value="" disabled="disabled">---------------</option>
+                                    </select>
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="einUName">Name:</label>
+                                    <input type="text" id="einUName" placeholder="Enter Name..." value="">
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="einUName">Email:</label>
+                                    <input type="text" id="einUEmail" placeholder="Enter Email..." value="">
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="einUPhone">Phone:</label>
+                                    <input type="text" id="einUPhone" placeholder="Enter Phone..." value="">
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="einUSID">Student ID:</label>
+                                    <input type="number" id="einUSID" placeholder="Enter Student ID..." value="">
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="einUDept">Department:</label>
+                                    <select id="einUDept" data-mini="true">
+                                        <option value="">Department</option>
+                                        <option value="" disabled="disabled">---------------</option>
+                                        <option value="Daily Bruin">Daily Bruin</option>
+                                        <option value="DB Online">DB Online</option>
+                                        <option value="DB Video">DB Video</option>
+                                        <option value="UCLA Radio">UCLA Radio</option>
+                                        <option value="BruinLife">BruinLife</option>
+                                        <option value="Bruin Media Group">Bruin Media Group</option>
+                                        <option value="OutWrite">OutWrite</option>
+                                        <option value="FEM">FEM</option>
+                                        <option value="Nommo">Nommo</option>
+                                        <option value="Pacific Ties">Pacific Ties</option>
+                                        <option value="La Gente">La Gente</option>
+                                        <option value="Ha'Am">Ha'Am</option>
+                                        <option value="Al-Talib">Al-Talib</option>
+                                    </select>
+                                </li>
+                                <li class="ui-field-contain">
+                                    <a href="#" id="editSubmit" text-align="center" class="ui-btn">Submit</a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div data-role="collapsible" data-collapsed="true">
+                            <h4>Edit Equipment</h4>
+                            <ul data-role="listview" data-inset="false">
+                                <li class="ui-field-contain">
+                                    <label for="selectEquip">Equipment:</label>
+                                    <select id="selectEquip" data-mini="true" onchange="fillEquip(parseInt($('#selectEquip').val()));">
+                                        <option value="">Equipment</option>
+                                        <option value="" disabled="disabled">---------------</option>
+                                    </select>
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="einEName">Equipment Name:</label>
+                                    <input type="text" id="einEName" placeholder="Enter Equipment Name..." value="">
+                                </li>
+                                <li data-role="list-divider">Parts</li>
+                                <li class="ui-field-contain">
+                                    <label for="einParts">Add Part:</label>
+                                    <input type="text" id="einParts" placeholder="Enter Part..." value="">
+                                    <button id="editPartButton" align="left" class="ui-btn ui-btn-inline">Add Part</button>
+                                </li>
+                                <li class="ui-field-contain">  
+                                    <ul data-role="listview" id="ecurrParts" data-inset="true">
+                                    </ul>
+                                </li>
+                                <li class="ui-field-contain">
+                                    <label for="eComment">Comments:</label>
+                                    <textarea id="eComment" placeholder="Enter any comments here..." value=""></textarea>
+                                </li>
+                                <li class="ui-field-contain">
+                                    <a href="#" id="updateEquip" text-align="center" class="ui-btn">Submit</a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div data-role="collapsible" data-collapsed="true">
+                            <h4>Delete User</h4>
+                            <ul data-role="listview" data-inset="false">
+                                <li class="ui-field-contain">
+                                    <label for="delSelUser">User:</label>
+                                    <select id="delSelUser" data-mini="true">
+                                        <option value="">User Name</option>
+                                        <option value="" disabled="disabled">---------------</option>
+                                    </select>
+                                </li>
+                                <li class="ui-field-contain">
+                                    <a href="#" id="deleteUser" text-align="center" class="ui-btn">Delete</a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div data-role="collapsible" data-collapsed="true">
+                            <h4>Delete Equipment</h4>
+                            <ul data-role="listview" data-inset="false">
+                                <li class="ui-field-contain">
+                                    <label for="delSelEquip">Equipment:</label>
+                                    <select id="delSelEquip" data-mini="true">
+                                        <option value="">Equipment</option>
+                                        <option value="" disabled="disabled">---------------</option>
+                                    </select>
+                                </li>
+                                <li class="ui-field-contain">
+                                    <a href="#" id="deleteEquip" text-align="center" class="ui-btn">Delete</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dialog Boxes -->
+        <div data-role="page" data-dialog="true" data-control-title="Equipment Information" id="equipInfo">
+            <div data-role="header">
+                <h1 id="businessName">Equipment Information</h1>
+            </div>
+            <div data-role="content">
+                <ul data-role="listview" data-inset="false">
+                    <li class="ui-field-contain">
+                        <h3 id="checkName" style="margin:0px;">Name</h3>
+                    </li>
+                    <li class="ui-field-contain">
+                        <h3 style="margin:0px;"><b>Currently <span id="checkStatus">In</span><span id="additionalName"></span></b></h3>
+                    </li>
+                    <li id="timeDialog" class="ui-field-contain">
+                        <h3 style="margin:0px;"><b>Checked out: <span id="outDate"></span></b></h3>
+                    </li>
+                    <li class="ui-field-contain">
+                        <h3 style="margin:0px;"><b id="authName"></b></h3>
+                    </li>
+                    <li id="deleteLink" class="ui-field-contain">
+                        <a href="#" target="_top">Email User?</a>
+                    </li>
+                    <li id="commentBox" class="ui-field-contain">
+                        <p id="comBox"></p>
+                    </li>
+                    <li class="ui-field-contain">
+                        <ul id="partsDialogList" data-role="listview" data-inset="true">
+                        </ul>
+                    </li>
+                    <!-- <li class="ui-field-contain">
+                        <ul id="mPartsDialogList" data-role="listview" data-inset="true">
+                        </ul>
+                    </li> -->
+                </ul>
+                <br />
+                <a href="#page1" data-rel="back" class="ui-btn ui-shadow ui-corner-all ui-btn-a">Back</a>
+            </div>
+        </div>
+
+        <div data-role="page" data-dialog="true" data-control-title="Missing Parts" id="missingPartsDialog">
+            <div data-role="header">
+                <h1 id="businessName">Missing Parts</h1>
+            </div>
+            <div data-role="content">
+                <p>Warning! This piece of equipment is incomplete. Are you sure you wish to check it out?</p>
+                <p>The following parts are missing:</p>
+                <ul id="missingList">
+                </ul>
+                <div class="ui-grid-a">
+                    <div class="ui-block-a">
+                        <a href="#" data-rel="back" class="ui-btn ui-shadow ui-corner-all" data-theme="a">Cancel</a>
+                    </div>
+                    <div class="ui-block-b">
+                        <a href="#" id="missingContinue" onclick="checkOutFirebase( $('#checkOutList').val(), getUserIndex( $('#cOutID').val() ));" class="ui-btn ui-shadow ui-corner-all" data-theme="b">Continue</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

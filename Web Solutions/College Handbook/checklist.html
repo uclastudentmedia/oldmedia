@@ -1,0 +1,116 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>College Checklist</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>
+        <script src="js/jstorage.js"></script>
+        <style type="text/css">
+            /* CSS */ 
+        </style>
+        <script>
+            // Javascript
+        </script>
+    </head>
+    <body>
+        <div data-role="content">
+            <h2 class="ui-bar ui-bar-a ui-corner-all">Notes</h2>
+                <fieldset data-role="controlgroup">
+                    <div style="margin-left:1em">
+                        <p style="margin-bottom:5px;">Early Application Deadline:</p>
+                        <input type="date" data-role="date" id="rAppDead">
+                    </div>
+                    <div style="margin-left:1em">
+                        <p style="margin-bottom:5px;">Regular Application Deadline:</p>
+                        <input type="date" data-role="date" id="rAppDead">
+                    </div>
+                    <div style="margin-left:1em">
+                        <p style="margin-bottom:5px;">Priority Financial Aid Deadline:</p>
+                        <input type="date" data-role="date" id="rAppDead">
+                    </div>
+                    <div style="margin-left:1em">
+                        <p style="margin-bottom:5px;">Regular Financial Aid Deadline:</p>
+                        <input type="date" data-role="date" id="rAppDead">
+                    </div>
+                </fieldset>
+            <h2 class="ui-bar ui-bar-a ui-corner-all">Checklist</h2>
+            <div style="margin-left:1em" id="checklist">
+                <fieldset data-role="controlgroup">
+                    <input type="checkbox" id="checkbox-1a">
+                    <label for="checkbox-1a">Get the application</label>
+                    <input type="checkbox" id="checkbox-2a">
+                    <label for="checkbox-2a">Request high school transcript sent</label>
+                    <input type="checkbox" id="checkbox-3a">
+                    <label for="checkbox-3a">Request midyear grade report sent</label>
+                    <input type="checkbox" id="checkbox-4a">
+                    <label for="checkbox-4a">Find out if an admission test is required</label>
+                    <input type="checkbox" id="checkbox-5a">
+                    <label for="checkbox-5a">Take an admission test if required</label>
+                    <input type="checkbox" id="checkbox-6a">
+                    <label for="checkbox-6a">Take other required or recommended tests (e.g., SAT Subject Tests, AP Exams, IB exams)</label>
+                    <input type="checkbox" id="checkbox-7a">
+                    <label for="checkbox-7a">Send test scores</label>
+                    <input type="checkbox" id="checkbox-8a">
+                    <label for="checkbox-8a">Request recommendation letters</label>
+                    <input type="checkbox" id="checkbox-9a">
+                    <label for="checkbox-9a">Send thank-you notes to recommendation writers</label>
+                    <input type="checkbox" id="checkbox-10a">
+                    <label for="checkbox-10a">Draft initial essay</label>
+                    <input type="checkbox" id="checkbox-11a">
+                    <label for="checkbox-11a">Proofread essay for spelling and grammar</label>
+                    <input type="checkbox" id="checkbox-12a">
+                    <label for="checkbox-12a">Have two people read your essay</label>
+                    <input type="checkbox" id="checkbox-13a">
+                    <label for="checkbox-13a">Revise your essay</label>
+                    <input type="checkbox" id="checkbox-14a">
+                    <label for="checkbox-14a">Proofread your revision</label>
+                    <input type="checkbox" id="checkbox-15a">
+                    <label for="checkbox-15a">Interview at college campus</label>
+                    <input type="checkbox" id="checkbox-16a">
+                    <label for="checkbox-16a">Have an alumni interview</label>
+                    <input type="checkbox" id="checkbox-17a">
+                    <label for="checkbox-17a">Send thank-you notes to interviewer(s)</label>
+                    <input type="checkbox" id="checkbox-18a">
+                    <label for="checkbox-18a">Complete college application</label>
+                    <input type="checkbox" id="checkbox-19a">
+                    <label for="checkbox-19a">Make copies of all application materials</label>
+                    <input type="checkbox" id="checkbox-20a">
+                    <label for="checkbox-20a">Pay application fee</label>
+                    <input type="checkbox" id="checkbox-21a">
+                    <label for="checkbox-21a">Sign and send application</label>
+                    <input type="checkbox" id="checkbox-22a">
+                    <label for="checkbox-22a">Confirm receipt of application materials</label>
+                    <input type="checkbox" id="checkbox-23a">
+                    <label for="checkbox-23a">Send additional material, if required</label>
+                    <input type="checkbox" id="checkbox-24a">
+                    <label for="checkbox-24a">Tell school counselor that you applied</label>
+                    <input type="checkbox" id="checkbox-25a">
+                    <label for="checkbox-25a">Submit FAFSA</label>
+                    <input type="checkbox" id="checkbox-26a">
+                    <label for="checkbox-26a">Submit PROFILE, if needed</label>
+                    <input type="checkbox" id="checkbox-27a">
+                    <label for="checkbox-27a">Submit college aid form, if needed</label>
+                    <input type="checkbox" id="checkbox-28a">
+                    <label for="checkbox-28a">Submit state aid form, if needed</label>
+                    <input type="checkbox" id="checkbox-29a">
+                    <label for="checkbox-29a">Receive letter from office of admission</label>
+                    <input type="checkbox" id="checkbox-30a">
+                    <label for="checkbox-30a">Receive financial aid award letter</label>
+                    <input type="checkbox" id="checkbox-31a">
+                    <label for="checkbox-31a">Meet deadline to accept admission and send deposit</label>
+                    <input type="checkbox" id="checkbox-32a">
+                    <label for="checkbox-32a">Accept financial aid offer</label>
+                    <input type="checkbox" id="checkbox-33a">
+                    <label for="checkbox-33a">Notify the colleges that you will not attend</label>
+                </fieldset>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,54 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Calorie Counter</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.js"></script>
+        <style type="text/css">
+            * { 
+                font-family: "Celeste Mobi Pro", Celeste, serif;
+            }
+        </style>
+        <script>
+            function getGender()
+            {
+                return $("input[name*=radio-choice-h-2]:checked").val();
+            }
+        </script>
+    </head>
+    <body>
+        <div data-role="content">
+            <p align="center"><font size="72" >3000</font></p>
+            <form>
+                <fieldset onchange="alert(getGender());" id="genderChoice" data-role="controlgroup" data-type="horizontal" align="center" style="margin-bottom:0px">
+                    <input type="radio" name="radio-choice-h-2" id="radio-choice-h-2a" value="male" checked="checked">
+                    <label for="radio-choice-h-2a">Male</label>
+                    <input type="radio" name="radio-choice-h-2" id="radio-choice-h-2b" value="female">
+                    <label for="radio-choice-h-2b">Female</label>
+                </fieldset>
+            </form>
+            <div class="ui-grid-a">
+                <div class="ui-block-a">
+                    <form>
+                        <input type="number" placeholder="Height" data-clear-btn="true" name="number-2" id="number-2" value="">
+                    </form>
+                </div>
+                <div class="ui-block-b">
+                    <form>
+                        <select name="select-native-2" id="select-native-2" data-mini="true">
+                            <option value="1">Inches</option>
+                            <option value="2">Centimeters</option>
+                        </select>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

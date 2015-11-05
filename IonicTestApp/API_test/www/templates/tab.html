@@ -1,0 +1,53 @@
+<ion-nav-bar ng-controller="global" class="bar-custom" ng-class="{'has-tabs-top': isIOS()}">
+  <ion-nav-back-button>
+  </ion-nav-back-button>
+  <!--<ion-nav-buttons side="secondary">
+  	<button class="button button-icon light ion-person" ng-click="modal.show()"></button>
+  </ion-nav-buttons>-->
+</ion-nav-bar>
+<ion-tabs ng-controller="global" ng-class="{'tabs-icon-top tabs-custom': isIOS(), 'tabs-custom': !isIOS()}" class="tabs-color-active-light tabs-color-light">
+	<div ng-if="isIOS()">
+		<!-- For traditional iOS tabs -->
+		<ion-tab title="Home" icon="ion-home" ui-sref="app.home">
+			<ion-nav-view name="app-home"></ion-nav-view>
+		</ion-tab>
+
+		<ion-tab title="Events" icon="ion-calendar" ui-sref="app.magPages">
+			<ion-nav-view name="app-events"></ion-nav-view>
+		</ion-tab>
+
+		<ion-tab title="Handbooks" icon="ion-ios-paper" ui-sref="app.handbooks">
+			<ion-nav-view name="app-handbooks"></ion-nav-view>
+		</ion-tab>
+
+		<ion-tab title="Classifieds" icon="ion-document-text" ui-sref="app.classifieds">
+			<ion-nav-view name="app-classifieds"></ion-nav-view>
+		</ion-tab>
+
+		<ion-tab title="More" icon="ion-more" ui-sref="app.more">
+			<ion-nav-view name="app-more"></ion-nav-view>
+		</ion-tab>
+	</div>
+	<div ng-if="!isIOS()" hidden>
+		<!-- For beautiful master-race Android tabs -->
+		<ion-tab title="Home" class="tab-item-custom" ui-sref="app.home">
+			<ion-nav-view name="app-home"></ion-nav-view>
+		</ion-tab>
+
+		<ion-tab title="Events" class="tab-item-custom" ui-sref="app.magPages">
+			<ion-nav-view name="app-events"></ion-nav-view>
+		</ion-tab>
+
+		<ion-tab title="Handbooks" class="tab-item-custom" ui-sref="app.handbooks">
+			<ion-nav-view name="app-handbooks"></ion-nav-view>
+		</ion-tab>
+        
+        <ion-tab title="Classifieds" class="tab-item-custom" ui-sref="app.classifieds">
+			<ion-nav-view name="app-classifieds"></ion-nav-view>
+		</ion-tab>
+
+		<ion-tab title="More" class="tab-item-custom" ui-sref="app.more">
+			<ion-nav-view name="app-more"></ion-nav-view>
+		</ion-tab>
+	</div>
+</ion-tabs>

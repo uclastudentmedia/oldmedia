@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en" style="height: 100% !important; overflow: hidden !important">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="UCLA Radio">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>UCLA Radio</title> 
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <!-- bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <!-- font awesome -->
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- other fonts -->
+    <link href='http://fonts.googleapis.com/css?family=Lato:300italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Merriweather:300' rel='stylesheet' type='text/css'>
+
+    <!-- trianglify, for background stuff -->
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/trianglify/0.1.4/trianglify.min.js"></script>
+
+    <!-- Our stylesheets/scripts -->
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <script src="js/scripts.js"></script>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+    <!-- Google analytics -->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+       ga('create', 'UA-55657708-1', 'auto');
+       ga('send', 'pageview');
+
+       var scrollPosition = [
+        self.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft,
+        self.pageYOffset || document.documentElement.scrollTop  || document.body.scrollTop
+      ];
+      var html = jQuery('html'); // it would make more sense to apply this to body, but IE7 won't have that
+      html.data('scroll-position', scrollPosition);
+      html.data('previous-overflow', html.css('overflow'));
+      html.css('overflow', 'hidden');
+      window.scrollTo(scrollPosition[0], scrollPosition[1]);
+
+
+      // un-lock scroll position
+      var html = jQuery('html');
+      var scrollPosition = html.data('scroll-position');
+      html.css('overflow', html.data('previous-overflow'));
+      window.scrollTo(scrollPosition[0], scrollPosition[1])
+    </script>
+  </head>
+  <body>
+    <div class="container" style="padding: 5%; height: 100% !important; position: fixed !important" role="main">
+      <img id="logo" src="img/logo.png" style="padding-bottom: 0%; padding-top: 20%" alt="UCLA RADIO" />
+      <div id="play-button" style="position: relative !important; top: 50%; transform: translateY(-100%);">
+        <a role="button" class="pop-button text-center" href="#">
+          <span id="play-icon" style="position: relative !important; top: 50% !important; transform: translateY(-72%) !important;" class="fa fa-play"></span>
+          <audio id="stream" preload="none">
+            <p>Your browser does not support the stream. :(</p>
+          </audio>
+        </a>
+      </div>
+      <div class="row" id="billboard" style="position: relative; top: 50%; transform: translateY(-100%);">
+        <div class="col-sm-12"> 
+          LISTEN LIVE
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12 desktop-only text-justify" id="messages">
+          <p>
+            UCLA Radio is an entirely student run radio station.
+            We broadcast all day, every day from a secret cave
+            in Ackerman Student Union.
+          </p>
+          <p>
+            Our schedule is available <a href='http://i.imgur.com/GTv4EUs.png'>here.</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+

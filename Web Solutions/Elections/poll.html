@@ -1,0 +1,341 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Election Poll</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>
+
+        <script src="//cdnjs.cloudflare.com/ajax/libs/json2/20110223/json2.js"></script>
+        <script src="http://malsup.github.io/jquery.blockUI.js"></script> 
+        <script src="js/jstorage.js"></script>
+
+        <style type="text/css">
+            /* CSS */
+        </style>
+        <script>
+            var myDataRef = new Firebase("https://uclastudentmedia.firebaseio.com/election");
+            var electionCandidates = myDataRef.child('candidates-2014');
+
+            var officePositions = [ "President", "Internal Vice President", "External Vice President", "Academic Affairs Commissioner", "Student Wellness Commissioner", "Community Service Commissioner", "Facilities Commissioner", "Financial Supports Commissioner", "Cultural Affairs Commissioner", "Campus Events Commissioner", "General Representatives" ];
+
+            var candidates = new Array();
+
+            $(document).ready( function() {
+
+                $.blockUI({ 
+                    message: null, 
+                });
+
+                electionCandidates.once( 'value', function( dataSnapshot )
+                {
+                    var data = dataSnapshot.val();
+                    for ( var i in data )
+                    {
+                        candidates.push( new Candidate( data[i]['name'], data[i]['party'], data[i]['office'], data[i]['votes'], i ));
+                    }
+
+                    for ( var q = 0; q < officePositions.length - 1; q++ )
+                    {
+                        writePositionAccordion( officePositions[q] );
+                    }
+
+                    writeCheckBoxAccordion( officePositions[officePositions.length - 1] );
+
+                    $.unblockUI();
+                });
+            });
+
+            // BEGIN CANDIDATE OBJECT DEFINITION
+
+            function Candidate( name, party, office, votes, key )
+            {
+                this.name = name;
+                this.party = party;
+                this.office = office;
+                this.votes = votes;
+                this.key = key;
+            }
+
+            Candidate.prototype.name = "";
+            Candidate.prototype.party = "";
+            Candidate.prototype.office = "";
+            Candidate.prototype.votes = 0;
+            Candidate.prototype.key = "";
+
+            Candidate.prototype.getName = function() {
+                return this.name;
+            }
+
+            Candidate.prototype.getParty = function() {
+                return this.party;
+            }
+
+            Candidate.prototype.getOffice = function() {
+                return this.office;
+            }
+
+            Candidate.prototype.getVotes = function() {
+                return this.votes;
+            }
+
+            Candidate.prototype.getKey = function() {
+                return this.key;
+            }
+
+            Candidate.prototype.addVote = function() {
+                this.votes++;
+                electionCandidates.child(this.key).update( { votes: this.votes });
+            }
+            // END CANDIDATE OBJECT DEFINITION
+
+            function addCandidate( name, party, office )
+            {
+                electionCandidates.push( new Candidate( name, party, office, 0, "" ));
+            }
+
+            function returnOffice( position )
+            {
+                var officeInPos = new Array();
+                for ( var i = 0; i < candidates.length; i++ )
+                {
+                    if ( candidates[i].getOffice() == position )
+                    {
+                        officeInPos.push( candidates[i] );
+                    }
+                }
+
+                return officeInPos;
+            }
+
+            function writePositionAccordion( position )
+            {
+                var candidList = returnOffice( position );
+                var locationID = position.toLowerCase().replace(/ /g,'');
+
+                for ( var i = 0; i < candidList.length; i++ )
+                {
+                    $("#" + locationID).append( "<input type='radio' name='" + position + "' value='" + i + "' id='" + locationID + i + "'>");
+                    $("#" + locationID).append( "<label for='" + locationID + i + "'>" + candidList[i].getName() + " (" + candidList[i].getParty() + ") " + "</label>" );
+                }
+
+                $("#" + locationID).trigger('create');
+            }
+
+            function writeCheckBoxAccordion( position )
+            {
+                var candidList = returnOffice( position );
+                var locationID = position.toLowerCase().replace(/ /g,'');
+
+                for ( var i = 0; i < candidList.length; i++ )
+                {
+                    $("#" + locationID).append( "<input class='genRep' type='checkbox' onchange='checkLimit(3);' name='" + position + "' value='" + i + "' id='" + locationID + i + "'>");
+                    $("#" + locationID).append( "<label for='" + locationID + i + "'>" + candidList[i].getName() + " (" + candidList[i].getParty() + ") " + "</label>" );
+                }
+
+                $("#" + locationID).trigger('create');
+            }
+
+            function checkLimit( limit )
+            {
+                if($('input.genRep').filter(':checked').length >= 3)
+                    $('input.genRep:not(:checked)').attr('disabled', 'disabled');
+                else
+                    $('input.genRep').removeAttr('disabled');
+            }
+
+            function returnPercentages( position )
+            {
+                var candidList = returnOffice( position );
+                var percentageArray = new Array();
+                var sum = 0;
+
+                for ( var i = 0; i < candidList.length; i++ )
+                {
+                    sum += candidList[i].getVotes();
+                }
+
+                for ( var i = 0; i < candidList.length; i++ )
+                {
+                    percentageArray.push( Math.round((candidList[i].getVotes()/sum) * 100) );
+                }
+
+                return percentageArray;
+            }
+
+            // @Warning: This method will ONLY work for two candidates so far
+            function displayBar( position )
+            {
+                var locationID = position.toLowerCase().replace(/ /g,'');
+                var array = returnPercentages( position );
+                var string = "";
+                for ( var i = 0; i < array.length; i++ )
+                {
+                    string += array[i] + ", ";
+                }
+
+                $("#" + locationID).append("<p>" + string + "</p>");
+            }
+
+            function submitVotes()
+            {
+                if ( $.jStorage.get("voted") == true )
+                {
+                    alert("You have already voted!");
+                }
+                else
+                {
+                    for ( var i = 0; i < officePositions.length - 1; i++ )
+                    {
+                        if ( typeof $("[name='" + officePositions[i] + "']:checked").val() == "string" )
+                        {
+                            var candidateObject = returnOffice( officePositions[i])[parseInt( $("[name='" + officePositions[i] + "']:checked").val() )];
+                            electionCandidates.child( candidateObject.getKey() ).update( {votes: candidateObject.getVotes() + 1} );
+                        }
+                    }
+
+                    for ( var i = 0; i < $("input.genRep").filter(":checked").length; i++ )
+                    {
+                        var candidateObject = returnOffice( officePositions[officePositions.length - 1])[parseInt( $("input.genRep").filter(":checked")[i].value)];
+                        electionCandidates.child( candidateObject.getKey() ).update( {votes: candidateObject.getVotes() + 1 } );
+                    }
+
+                    $.jStorage.set("voted", true);
+                    alert("Your votes have been submitted!");
+                    window.location.reload();
+                }
+            }
+
+            function printCurrResults()
+            {
+                var timeStampArray = new Array();
+
+                for ( var i = 0; i < officePositions.length; i++ )
+                {
+                    console.log( officePositions[i] );
+                    for ( var j = 0; j < returnOffice( officePositions[i] ).length; j++ )
+                    {
+                        console.log( returnOffice( officePositions[i] )[j].getName() + " (" + returnOffice( officePositions[i] )[j].getParty() + "): " + returnOffice( officePositions[i] )[j].getVotes() + " votes" );
+                    }
+                    timeStampArray[ candidates[i].getName() ] = candidates[i].getVotes();
+                }
+
+                timeStampArray["Time"] = $.now();
+                // Update this every time we reset the poll
+                $.jStorage.set( "poll-1", timeStampArray );
+            }
+        </script>
+    </head>
+    <body>
+        <div data-role="content">
+            <h1>Candidates</h1>
+
+            <div data-role='collapsible'>
+                <h3>President</h3>
+                <form>
+                    <fieldset id="president" data-role="controlgroup">
+                        <legend>Choose a Candidate:</legend>
+                    </fieldset>
+                </form>
+            </div>
+
+            <div data-role='collapsible'>
+                <h3>Internal Vice President</h3>
+                <form>
+                    <fieldset id="internalvicepresident" data-role="controlgroup">
+                        <legend>Choose a Candidate:</legend>
+                    </fieldset>
+                </form>
+            </div>
+
+            <div data-role='collapsible'>
+                <h3>External Vice President</h3>
+                <form>
+                    <fieldset id="externalvicepresident" data-role="controlgroup">
+                        <legend>Choose a Candidate:</legend>
+                    </fieldset>
+                </form>
+            </div>
+
+            <div data-role='collapsible'>
+                <h3>Academic Affairs Commissioner</h3>
+                <form>
+                    <fieldset id="academicaffairscommissioner" data-role="controlgroup">
+                        <legend>Choose a Candidate:</legend>
+                    </fieldset>
+                </form>
+            </div>
+
+            <div data-role='collapsible'>
+                <h3>Student Wellness Commissioner</h3>
+                <form>
+                    <fieldset id="studentwellnesscommissioner" data-role="controlgroup">
+                        <legend>Choose a Candidate:</legend>
+                    </fieldset>
+                </form>
+            </div>
+
+            <div data-role='collapsible'>
+                <h3>Community Service Commissioner</h3>
+                <form>
+                    <fieldset id="communityservicecommissioner" data-role="controlgroup">
+                        <legend>Choose a Candidate:</legend>
+                    </fieldset>
+                </form>
+            </div>
+
+            <div data-role='collapsible'>
+                <h3>Facilities Commissioner</h3>
+                <form>
+                    <fieldset id="facilitiescommissioner" data-role="controlgroup">
+                        <legend>Choose a Candidate:</legend>
+                    </fieldset>
+                </form>
+            </div>
+
+            <div data-role='collapsible'>
+                <h3>Financial Supports Commissioner</h3>
+                <form>
+                    <fieldset id="financialsupportscommissioner" data-role="controlgroup">
+                        <legend>Choose a Candidate:</legend>
+                    </fieldset>
+                </form>
+            </div>
+
+            <div data-role='collapsible'>
+                <h3>Cultural Affairs Commissioner</h3>
+                <form>
+                    <fieldset id="culturalaffairscommissioner" data-role="controlgroup">
+                        <legend>Choose a Candidate:</legend>
+                    </fieldset>
+                </form>
+            </div>
+
+            <div data-role='collapsible'>
+                <h3>Campus Events Commissioner</h3>
+                <form>
+                    <fieldset id="campuseventscommissioner" data-role="controlgroup">
+                        <legend>Choose a Candidate:</legend>
+                    </fieldset>
+                </form>
+            </div>
+
+            <div data-role='collapsible'>
+                <h3>General Representatives</h3>
+                <form>
+                    <fieldset id="generalrepresentatives" data-role="controlgroup">
+                        <legend>Choose 3 Candidates:</legend>
+                    </fieldset>
+                </form>
+            </div>
+
+            <a onclick="submitVotes()" href="#" class="ui-btn">Submit Votes</a>
+        </div>
+    </body>
+</html>

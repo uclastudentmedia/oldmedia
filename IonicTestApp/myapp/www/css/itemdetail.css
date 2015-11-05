@@ -1,0 +1,166 @@
+/*
+	following css taken directly from the item detail page on the menu website
+	http://menu.ha.ucla.edu/foodpro/recipedetail.asp?RecipeNumber=113001&PortionSize=4
+*/
+
+.nfbox
+{
+	background-color: #FFFFFF;
+	border: 1px solid #000000;
+	color: #000000;
+	display: table;
+	font-family: Helvetica, Arial, Verdana, Geneva, sans-serif;
+	font-size: 10pt;
+	margin-bottom: 5px;
+	margin-left: 5px;
+	margin-right: 5px;
+	margin-top: 0;
+	padding-bottom: 3px;
+	padding-left: 5px;
+	padding-right: 5px;
+	padding-top: 5px;
+	text-decoration: none;
+}
+
+.nftitle
+{
+	font-family: "Helvetica Black", "Arial Black", "Franklin Gothic Heavy", sans-serif;
+	font-size: 2.0em;
+	margin-bottom: 0;
+	margin-top: 0;
+	text-align: center;
+}
+
+.nfserv
+{
+	margin-bottom: 0;
+	margin-top: 0;
+}
+
+.nfamt
+{
+	border-top: 7px solid #000000;
+	font-size: 0.75em;
+	font-weight: bold;
+	margin-bottom: 1px;
+	margin-top: 1px;
+	padding-top: 2px;
+}
+
+.nfcal
+{
+	border-top: 1px solid #000000;
+	margin-bottom: 1px;
+	margin-top: 1px;
+	padding-top: 2px;
+}
+
+.nfcaltxt
+{
+	font-weight: bold;
+}
+
+.nffatcal
+{
+	float: right;
+}
+
+.nfdvhdr
+{
+	border-top: 3px solid #000000;
+	font-size: 0.75em;
+	font-weight: bold;
+	margin-bottom: 1px;
+	margin-top: 1px;
+	padding-top: 2px;
+	text-align: right;
+}
+
+.nfdvval
+{
+	float: right;
+}
+
+.nfdvvalnum
+{
+	font-weight: bold;
+}
+
+.nfnutrient
+{
+	border-top: 1px solid #000000;
+	margin-bottom: 1px;
+	margin-top: 1px;
+	padding-top: 2px;
+}
+
+.nfmajornutrient
+{
+	font-weight: bold;
+}
+
+.nfindent
+{
+	margin-left: 15px;
+}
+
+.nfvit
+{
+	border-top: 1px solid #000000;
+	margin-bottom: 1px;
+	margin-top: 1px;
+	padding-top: 2px;
+	text-align: center;
+}
+
+.nfvitfirst
+{
+	border-top: 7px solid #000000;
+	margin-bottom: 1px;
+	margin-top: 1px;
+	padding-top: 2px;
+	text-align: center;
+}
+
+.nfvitleft
+{
+	float: left;
+	margin-bottom: 0;
+	margin-top: 0;
+	padding-right: 2px;
+	width: 45%;
+}
+
+.nfvitright
+{
+	float: right;
+	margin-bottom: 0;
+	margin-top: 0;
+	padding-left: 2px;
+	width: 45%;
+}
+
+.nfvitname
+{
+	float: left;
+}
+
+.nfvitpct
+{
+	float: right;
+}
+
+.nfdisclaimer
+{
+	border-top: 1px solid #000000;
+	clear: both;
+	font-family: "Helvetica Narrow", "Arial Narrow", sans-serif;
+	font-size: 0.75em;
+	margin-bottom: 1px;
+	margin-top: 1px;
+	padding-top: 2px;
+}
+
+/*
+	END CSS TAKEN FROM WEBSITE
+*/

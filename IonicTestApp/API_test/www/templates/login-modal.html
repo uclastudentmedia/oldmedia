@@ -1,0 +1,55 @@
+<ion-modal-view>
+	<ion-header-bar class="bar bar-header bar-custom" on-drag-down="modal.hide()">
+		<h1 class="title">Login</h1>
+		<button class="button button-clear button-primary" ng-click="modal.hide()">Close</button>
+	</ion-header-bar>
+	<!-- <div class="list has-header">
+		<label class="item item-input">
+			<span class="input-label">Username</span>
+			<input type="text">
+		</label>
+		<label class="item item-input">
+			<span class="input-label">Password</span>
+			<input type="password">
+		</label>
+	</div>
+	<br />
+	<br />
+	<div style="padding:4vw">
+		<button class="button button-block button-custom">
+			Login
+		</button>
+	</div> -->
+    <ion-content>
+	<ion-item class="list" style="padding: .5em .5em 0px .5em; border: 0">
+		<label class="item item-input">
+			<span class="input-label">Username</span>
+			<input type="text">
+		</label>
+		<label class="item item-input">
+			<span class="input-label">Password</span>
+			<input type="password">
+		</label>
+		<button class="button button-block button-custom">
+			Login
+		</button>
+	</ion-item>
+    <ion-item style="padding-top: 0px; border: 0">
+        Or log in with...
+    </ion-item>
+    <ion-item style="padding: .5em .5em 0px .5em; border: 0; text-align: center">
+		<button class="button button-positive" ng-click='login("facebook")'>
+			Facebook
+		</button>
+		<button class="btn-auth btn-google large" ng-click='login("google")'>
+			Google
+		</button>
+		<button class="button button-calm" ng-click='login("twitter")'>
+			Twitter
+		</button>
+		<button class="button button-dark" ng-click='login("github")'>
+			Github
+		</button>
+	</ion-item>
+    </ion-content>
+</ion-modal-view>

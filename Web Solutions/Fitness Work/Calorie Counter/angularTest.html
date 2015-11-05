@@ -1,0 +1,42 @@
+<html ng-app="phonecatApp">
+    <head>
+        <meta charset="utf-8">
+        <title>Calorie Counter</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.12/angular.min.js"></script>
+        <style type="text/css">
+            /* CSS */ 
+        </style>
+        <script>
+            var phonecatApp = angular.module('phonecatApp', []);
+ 
+            phonecatApp.controller('PhoneListCtrl', function ($scope) {
+              $scope.phones = [
+                {'name': 'Nexus S',
+                 'snippet': 'Fast just got faster with Nexus S.'},
+                {'name': 'Motorola XOOM™ with Wi-Fi',
+                 'snippet': 'The Next, Next Generation tablet.'},
+                {'name': 'MOTOROLA XOOM™',
+                 'snippet': 'The Next, Next Generation tablet.'}
+              ];
+            });
+        </script>
+    </head>
+    <body ng-controller="PhoneListCtrl">
+        <ul>
+            <li ng-repeat="phone in phones">
+                {{phone.name}}
+                <p>{{phone.snippet}}</p>
+                <p>Total number of phones: {{phones.length}}</p>
+            </li>
+        </ul>
+    </body>
+</html>

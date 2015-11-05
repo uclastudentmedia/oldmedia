@@ -1,0 +1,19 @@
+<ion-view>
+    <ion-nav-title ng-bind="entity.entity.name"></ion-nav-title>
+	<ion-content class="has-header">
+		<ion-item ng-if="valid(previewImage)" style="height:auto; padding:0px;">
+			<!--<div ng-style="imageClass"></div>-->
+            <div ng-style="{{size}}">
+                <img ng-src="{{previewImage}}" ng-style="{{size}}" />
+            </div>
+		</ion-item>
+		<ion-item ng-click="modal.show()" class="item item-icon-right" ng-if="valid(entity.description_label)">
+			<!-- Make this a link to the description page -->
+			<h2>{{entity.description_label}}</h2>
+			<i class="icon ion-ios-arrow-right"></i>
+		</ion-item>
+		<ion-item ng-repeat="section in sections" ng-if="section.section_type == 'link'" ng-init="section.link = section.link.replace(regex, 'tel:' + section.link)" ng-href="{{section.link}}">
+			{{section.name}}
+		</ion-item>
+	</ion-content>
+</ion-view>

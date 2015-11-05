@@ -1,0 +1,20 @@
+<ion-view>
+	<ion-nav-title>
+		{{post.title}}
+	</ion-nav-title>
+	<ion-content class="has-header">
+		<ion-refresher
+			on-refresh="doRefresh()"
+			pulling-text="Pull to refresh...">
+		</ion-refresher>
+    <div class="padding">
+		<div class="image-container" ng-if="valid(post.wp_thumbnail)">
+			<img class="thumbnail-image" ng-src="{{post.wp_thumbnail}}">
+		</div>
+		<p  class="thumbnail-caption" ng-if="valid(post.wp_thumbnail_caption)">{{post.wp_thumbnail_caption}}</p>
+		<h2 class="article-header">{{post.title}}</h2>
+		<div class="article-content padding-bottom" ng-bind-html="post.content_html">
+		</div>
+    </div>
+	</ion-content>
+</ion-view>

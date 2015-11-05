@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Add Speaker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <link href="http://code.jquery.com/mobile/1.4.1/jquery.mobile-1.4.1.min.css" rel="stylesheet">
+  <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+
+  <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+  <script src="http://code.jquery.com/mobile/1.4.1/jquery.mobile-1.4.1.min.js"></script>
+  <script>
+    var myDataRef = new Firebase('https://uclastudentmedia.firebaseio.com/speakersForm');
+
+    $(document).ready(function () {
+      var date = new Date();
+
+      $("#startdate").attr( "min", constructDate( date.getFullYear(), date.getMonth() + 1, date.getDay() ));
+      $("#startdate").attr( "max", constructDate( date.getFullYear() + 2, date.getMonth() + 1, date.getDay() ));
+
+      $("#enddate").attr( "min", constructDate( date.getFullYear(), date.getMonth() + 1, date.getDay() ));
+      $("#enddate").attr( "max", constructDate( date.getFullYear() + 2, date.getMonth() + 1, date.getDay() ));
+    });
+
+    function updatefire(title1, startdate1, starttime1, enddate1, endtime1, loc1, descrption1, category1)
+    {
+      var x = {title: title1, startdate: startdate1, starttime: starttime1, enddate: enddate1, endtime: endtime1, location: loc1, description: descrption1, category: getcats()};
+
+      if ( inRange( new Date( Date.parse(startdate1) )) && inRange( new Date( Date.parse(enddate1) )) && !lessThan( new Date( Date.parse(startdate1) ), new Date( Date.parse(enddate1) )))
+      {
+
+        if ( title1 != "" && startdate1 != "" && starttime1 != "" && enddate1 != "" && endtime1 != "" && loc1 != "" )
+        {
+          myDataRef.push(x);
+          alert ("Your response has been recorded");
+        }
+        else
+        {
+          alert("Please fill out all of the required fields!");
+        }
+      }
+    }
+
+    function getcats()
+    {
+      var categories = new Array();
+      $("input:checked").each(function () {
+        categories.push(this.name);
+    });
+           return categories;
+    }
+
+    function lessThan( date1, date2 )
+    {
+      return date2.valueOf() < date1.valueOf();
+    }
+
+    function inRange( date )
+    {
+      var newDate = new Date();
+      if ( date.valueOf() < $.now() || date.valueOf() > newDate.setYear( newDate.getFullYear() + 1 ).valueOf() )
+      {
+        alert("This date is out of bounds!");
+        return false;
+      }
+      return true;
+    }
+  </script>
+  <style>
+    /* Add CSS Code Here */
+  </style>
+</head>
+<body>
+  <div data-role="page" data-control-title="Home" id="page1">
+      <div data-role="content">
+          <div data-role="fieldcontain" data-controltype="textinput">
+              <input name="" id="title" placeholder="Event Title..." value="" type="text">
+          </div>
+          <div class="ui-grid-a">
+              <div class="ui-block-a">
+                  <div data-role="fieldcontain" data-controltype="dateinput">
+                      <label for="startdate">
+                          Start Date:
+                      </label>
+                      <input name="" id="startdate" placeholder="" value="" type="date">
+                  </div>
+              </div>
+              <div class="ui-block-b">
+                  <div data-role="fieldcontain" data-controltype="dateinput">
+                      <label for="starttime">
+                          Start Time:
+                      </label>
+                      <input name="" id="starttime" placeholder="" value="" type="time">
+                  </div>
+              </div>
+          </div>
+          <div class="ui-grid-a">
+              <div class="ui-block-a">
+                  <div data-role="fieldcontain" data-controltype="dateinput">
+                      <label for="enddate">
+                          End Date:
+                      </label>
+                      <input name="" id="enddate" placeholder="" value="" type="date">
+                  </div>
+              </div>
+              <div class="ui-block-b">
+                  <div data-role="fieldcontain" data-controltype="dateinput">
+                      <label for="endtime">
+                          End Time:
+                      </label>
+                      <input name="" id="endtime" placeholder="" value="" type="time">
+                  </div>
+              </div>
+          </div>
+          <div data-role="fieldcontain" data-controltype="textinput">
+              <input name="" id="loc" placeholder="Location..." value="" type="text">
+          </div>
+          <div data-role="fieldcontain" data-controltype="textinput">
+              <input name="" id="description" placeholder="Enter Description...." value=""
+              type="text">
+          </div>
+        <div id="checkboxes1" data-role="fieldcontain" data-controltype="checkboxes">
+              <fieldset data-role="controlgroup" data-type="vertical">
+                  <legend>
+                      Choose Categories:
+                  </legend>
+                  <input id="checkbox1" name="artshumanities" type="checkbox">
+                  <label for="checkbox1">
+                      Arts &amp; Humanities
+                  </label>
+                  <input id="checkbox2" name="businesspolitics" type="checkbox">
+                  <label for="checkbox2">
+                      Business &amp; Politics
+                  </label>
+                  <input id="checkbox3" name="careercenter" type="checkbox">
+                  <label for="checkbox3">
+                      Career Center
+                  </label>
+                  <input id="checkbox4" name="entertainment" type="checkbox">
+                  <label for="checkbox4">
+                      Entertainment
+                  </label>
+                  <input id="checkbox5" name="societyculture" type="checkbox">
+                  <label for="checkbox5">
+                      Society &amp; Culture
+                  </label>
+                  <input id="checkbox6" name="sciencetechnology" type="checkbox">
+                  <label for="checkbox6">
+                      Science &amp; Technology
+                  </label>
+              </fieldset>
+          </div>
+          <a href = "#" onclick="updatefire($('#title').val(), $('#startdate').val(), $('#starttime').val(), $('#enddate').val(), $('#endtime').val(), $('#loc').val(), $('#description').val(), $('#category').val())" data-role="button">Submit</a>
+      </div>
+  </div>
+</body>
+</html>

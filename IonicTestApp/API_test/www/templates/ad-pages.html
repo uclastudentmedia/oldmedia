@@ -1,0 +1,11 @@
+<ion-view view-title="{{title}}">
+	<ion-content class="has-header" scrollbar-y="false">
+		<ion-slide-box show-pager="false">
+			<ion-slide ng-repeat="ad in ads" ng-init="updateSlider();" ng-if="valid(ad.image_url);">
+				<div ng-click="clickHandler()" class="fit-img" zooming="true" direction="xy" ng-style="{{fixedHeight}}">
+					<img ng-src="{{ad.image_url}}" ng-style="{{fixedHeight}}" />
+				</div>
+			</ion-slide>
+		</ion-slide-box>
+	</ion-content>
+</ion-view>

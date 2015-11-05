@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Space Utilization Action Research Team</title>
+  <link rel="stylesheet" href="https://d10ajoocuyu32n.cloudfront.net/mobile/1.3.1/jquery.mobile-1.3.1.min.css">
+  
+  <!-- Extra Codiqa features -->
+  <link rel="stylesheet" href="codiqa.ext.css">
+  
+  <link rel="stylesheet" href="https://codiqa.com/view/408190da/css">
+  
+  <!-- jQuery and jQuery Mobile -->
+  <script src="https://d10ajoocuyu32n.cloudfront.net/jquery-1.9.1.min.js"></script>
+  <script src="https://d10ajoocuyu32n.cloudfront.net/mobile/1.3.1/jquery.mobile-1.3.1.min.js"></script>
+
+  <!-- Extra Codiqa features -->
+  <script src="https://d10ajoocuyu32n.cloudfront.net/codiqa.ext.js"></script>
+   
+  <script src="https://codiqa.com/view/408190da/js"></script>
+  
+</head>
+<body>
+  <!-- Home -->
+  <div data-role="page" id="page1">
+      <div data-theme="a" data-role="header">
+          <h3>
+              Availability
+          </h3>
+      </div>
+      <div data-role="content">
+          <ul data-role="listview" data-divider-theme="b" data-inset="true">
+              <li data-role="list-divider" role="heading">
+                  Locations
+              </li>
+              <li data-theme="">
+                  <a href="#page1" data-transition="slide">
+                      Ackermann Union
+                  </a>
+              </li>
+              <li data-theme="">
+                  <a href="#page1" data-transition="slide">
+                      Powell Library
+                  </a>
+              </li>
+              <li data-theme="">
+                  <a href="#page1" data-transition="slide">
+                      Young Research Library
+                  </a>
+              </li>
+          </ul>
+      </div>
+      <div data-role="tabbar" data-iconpos="top" data-theme="a">
+          <ul>
+              <li>
+                  <a href="#page1" data-transition="slide" data-theme="" data-icon="home">
+                      Home
+                  </a>
+              </li>
+              <li>
+                  <a href="#page2" data-transition="slide" data-theme="" data-icon="plus">
+                      Feedback
+                  </a>
+              </li>
+              <li>
+                  <a href="#page3" data-transition="slideup" data-theme="" data-icon="grid">
+                      Map
+                  </a>
+              </li>
+          </ul>
+      </div>
+  </div>
+  <!-- Submission -->
+  <div data-role="page" id="page2">
+      <div data-theme="a" data-role="header">
+          <h3>
+              Send Feedback
+          </h3>
+      </div>
+      <div data-role="content">
+          <div data-role="fieldcontain">
+              <label for="lbar">
+                  Where are you?
+              </label>
+              <select id="lbar" name="">
+                  <option value="option1">
+                      Ackerman Union
+                  </option>
+                  <option value="value">
+                      Powell Library
+                  </option>
+                  <option value="value">
+                      Young Research Library
+                  </option>
+              </select>
+          </div>
+          <div data-role="fieldcontain">
+              <label for="bbar">
+                  How busy is it?
+              </label>
+              <input id="bbar" type="range" name="slider" value="3" min="0" max="5"
+              data-highlight="false">
+          </div>
+          <input id="sub" type="submit" value="Submit!">
+      </div>
+      <div data-role="tabbar" data-iconpos="top" data-theme="a">
+          <ul>
+              <li>
+                  <a href="#page1" data-transition="slide" data-theme="" data-icon="home">
+                      Home
+                  </a>
+              </li>
+              <li>
+                  <a href="#page2" data-transition="slide" data-theme="" data-icon="plus">
+                      Feedback
+                  </a>
+              </li>
+              <li>
+                  <a href="#page3" data-transition="slideup" data-theme="" data-icon="grid">
+                      Map
+                  </a>
+              </li>
+          </ul>
+      </div>
+  </div>
+  <!-- Map -->
+  <div data-role="page" id="page3">
+      <div data-theme="a" data-role="header">
+          <h3>
+              Map
+          </h3>
+      </div>
+      <div data-role="content">
+          <img src="https://maps.googleapis.com/maps/api/staticmap?center=University of California, Los Angeles&amp;zoom=14&amp;size=275x300&amp;markers=Ackerman Union|&amp;sensor=false"
+          width="275" height="300">
+      </div>
+      <div data-role="tabbar" data-iconpos="top" data-theme="a">
+          <ul>
+              <li>
+                  <a href="#page1" data-transition="slide" data-theme="" data-icon="home">
+                      Home
+                  </a>
+              </li>
+              <li>
+                  <a href="#page2" data-transition="slide" data-theme="" data-icon="plus">
+                      Feedback
+                  </a>
+              </li>
+              <li>
+                  <a href="#page3" data-transition="slideup" data-theme="" data-icon="grid">
+                      Map
+                  </a>
+              </li>
+          </ul>
+      </div>
+  </div>
+  <!-- Ackerman Union -->
+  <div data-role="page" id="page5">
+      <div data-theme="a" data-role="header">
+          <a data-role="button" data-rel="back" href="#page1" data-icon="arrow-l"
+          data-iconpos="left" class="ui-btn-left">
+              Back
+          </a>
+          <h3>
+              Ackerman Union
+          </h3>
+      </div>
+      <div data-role="content">
+          <a data-role="button" href="#page5">
+              4.52
+          </a>
+          <div>
+              <p>
+                  <strong>
+                      Ackerman Union
+                  </strong>
+                  &nbsp;is rated at&nbsp;
+                  <strong>
+                      4.52&nbsp;
+                  </strong>
+                  on a scale from 1 - 5, with 1 being the MOST busy and 5 being the LEAST
+                  busy.
+              </p>
+              <p>
+                  Last updated: 3:14 PM
+              </p>
+          </div>
+          <img src="https://maps.googleapis.com/maps/api/staticmap?center=University of California, Los Angeles&amp;zoom=14&amp;size=100%x300&amp;markers=Ackerman Union&amp;sensor=false"
+          width="100%" height="300">
+      </div>
+      <div data-role="tabbar" data-iconpos="top" data-theme="a">
+          <ul>
+              <li>
+                  <a href="#page1" data-transition="slide" data-theme="" data-icon="home">
+                      Home
+                  </a>
+              </li>
+              <li>
+                  <a href="#page2" data-transition="slide" data-theme="" data-icon="plus">
+                      Feedback
+                  </a>
+              </li>
+              <li>
+                  <a href="#page3" data-transition="slideup" data-theme="" data-icon="grid">
+                      Map
+                  </a>
+              </li>
+          </ul>
+      </div>
+  </div>
+</body>
+</html>

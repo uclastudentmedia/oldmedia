@@ -1,0 +1,31 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Title</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+        <style type="text/css">
+            /* CSS */ 
+        </style>
+        <script>
+            function getTitle(){
+                var string = $("#text-1").val();     //# to denote id
+                $("#head-1").text(string);
+            }
+        </script>
+    </head>
+    <body>
+        <div data-role="content">
+            <h1 id="head-1">Hello World</h1>
+            <label for="text-1">Text input:</label>
+            <input type="text" id="text-1" value="" onchange="getTitle()">
+        </div>
+    </body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <link href="ios_inspired/styles.css" rel="stylesheet" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Space Utilization Action Research Team</title>
+  <link rel="stylesheet" href="https://s3.amazonaws.com/codiqa-cdn/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
+  <link rel="stylesheet" href="my.css" />
+  
+  <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+  <script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
+  <script src="my.js"></script>
+  <script>
+		// all dialog buttons should close their parent dialog
+		$(".ui-dialog button").live("click", function() {		
+			$("[data-role='dialog']").dialog("close");		
+		});
+		$(document).on("mobileinit", function(){
+		  $.mobile.defaultPageTransition = "slide";
+		});
+  </script>
+
+  <!-- User-generated css -->
+  <style>
+		#footerTabs {
+			background: #FFF -webkit-radial-gradient(circle, #FFF, #dee2e4);
+		}
+		.ui-listview sup {
+			font-size: 0.6em;
+			color: #cc0000;
+		}
+		body
+		{
+			background-color:grey;
+		}
+		a.inv
+		{
+			visibility:hidden;
+		}
+	</style>
+
+  <!-- User-generated js -->
+  <script>
+	/**
+	 * 2D-array that contains most of the data; this is a test array that will be replaced by
+	 * firebase in the future. First dimension holds the location; second dimension holds the
+	 * rating and the number of ratings thus far.
+	 * 
+	 * @author      Albert Deng
+	 */
+	var pushArray = [[0,0],[0,0],[0,0]];
+  
+	/**
+	 * Takes the information from the feedback form and updates the array's prior information.
+	 * Updates the pushArray first dimensional index from loc; averages against the existing rating
+	 * with the scale parameter. Intended to be used by the button 'sub'.
+	 * 
+	 * @param loc	The location being modified
+	 * @param scale	The rating
+	 * @author      Albert Deng
+	 */
+	function submitResponse( loc, scale )
+	{		
+		pushArray[loc][1] = pushArray[loc][1] + 1;
+		
+		// If first item, don't average
+		var divisor = 2;
+		if ( pushArray[loc][1] == 1 )
+		{
+			divisor = 1;
+		}
+		
+		pushArray[loc][0] = ( parseInt( pushArray[loc][0] ) + parseInt( scale ))/( divisor );
+		
+	}
+	
+	/**
+	 * Debug function with various functions.
+	 * 
+	 * @author      Albert Deng
+	 */
+	function debugFunction( index )
+	{
+		alert( pushArray[parseInt( index )][0] );
+	}
+	
+  </script>
+</head>
+<body>
+  <!-- Home -->
+  <div data-role="page" id="page1">
+      <div data-theme="a" data-role="header">
+          <h3>
+              Availability
+          </h3>
+      </div>
+      <div data-role="content">
+          <ul data-role="listview" data-divider-theme="b" data-inset="true">
+              <li data-role="list-divider" role="heading">Locations</li>
+              <li data-theme="d" data-icon="false">
+                  <a onclick="debugFunction(0)" data-transition="slide" value="0">Ackermann Union</a>
+              </li>
+              <li data-theme="d" data-icon="false">
+                  <a onclick="debugFunction(1)" data-transition="slide" value="1">Powell Library</a>
+              </li>
+              <li data-theme="d" data-icon="false">
+                  <a onclick="debugFunction(2)" data-transition="slide" value="2">Young Research Library</a>
+              </li>
+          </ul>
+      </div>
+      <div data-role="tabbar" data-iconpos="top" data-theme="a">
+          <ul>
+              <li>
+                  <a href="#page1" data-theme="" data-icon="home">Home</a>
+              </li>
+              <li>
+                  <a href="#page2" data-theme="" data-icon="plus">Feedback</a>
+              </li>
+              <li>
+                  <a href="#page3" data-theme="" data-icon="grid">Map</a>
+              </li>
+          </ul>
+      </div>
+  </div>
+  <!-- Submission -->
+  <div data-role="page" id="page2">
+      <div data-theme="a" data-role="header">
+          <h3>Send Feedback</h3>
+      </div>
+      <div data-role="content">
+          <div data-role="fieldcontain">
+              <label for="lbar">Where are you?</label>
+              <select id="lbar" name="">
+                  <option value="0">Ackerman Union</option>
+                  <option value="1">Powell Library</option>
+                  <option value="2">Young Research Library</option>
+              </select>
+          </div>
+          <div data-role="fieldcontain">
+              <label for="bbar">How busy is it?</label>
+              <input id="bbar" type="range" name="slider" value="3" min="1" max="5" data-highlight="false">
+          </div>
+          <button type="button" id="sub" onclick="submitResponse($('#lbar').val(),$('#bbar').val())">Submit!</button>
+      </div>
+      <div data-role="tabbar" data-iconpos="top" data-theme="a">
+          <ul>
+              <li>
+                  <a href="#page1" data-theme="" data-icon="home">Home</a>
+              </li>
+              <li>
+                  <a href="#page2" data-theme="" data-icon="plus">Feedback</a>
+              </li>
+              <li>
+                  <a href="#page3" data-theme="" data-icon="grid">Map</a>
+              </li>
+          </ul>
+      </div>
+  </div>
+  <!-- Map -->
+  <div data-role="page" id="page3">
+      <div data-theme="a" data-role="header">
+          <h3>Map</h3>
+      </div>
+      <div data-role="content">
+          <img src="https://maps.googleapis.com/maps/api/staticmap?center=University of California, Los Angeles&amp;zoom=14&amp;size=275x300&amp;markers=Ackerman Union|&amp;sensor=false">
+      </div>
+      <div data-role="tabbar" data-iconpos="top" data-theme="a">
+			<ul>
+				<li>
+					<a href="#page1" data-theme="" data-icon="home">Home</a>
+				</li>
+				<li>
+					<a href="#page2" data-theme="" data-icon="plus">Feedback</a>
+				</li>
+				<li>
+					<a href="#page3" data-theme="" data-icon="grid">Map</a>
+				</li>
+			</ul>
+      </div>
+  </div>
+  
+</body>
+</html>

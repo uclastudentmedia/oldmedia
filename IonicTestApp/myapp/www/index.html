@@ -1,0 +1,192 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Menus</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <link href="http://code.jquery.com/mobile/1.4.3/jquery.mobile-1.4.3.min.css" rel="stylesheet">
+    <link href="css\itemdetail.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #FFF !important;
+        }
+
+        .headerStyle {
+            background-color: #333 !important;
+        }
+    </style>
+
+    <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.3/jquery.mobile-1.4.3.min.js"></script>
+</head>
+<body>
+    <div data-role="page" data-control-title="Home" id="page1">
+        <div data-role="content">
+            <ul data-role="listview" data-inset="true">
+                <li>
+                    <a href="#locationname" onclick="hall = 'Bruin Plate';">
+                        <img src="images/bplate_icon.jpg">
+                        <h2>
+                            Bruin Plate
+                        </h2>
+                        <p>Fresh and healthy</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="#locationname" onclick="hall = 'FEAST at Rieber';">
+                        <img src="images/feast_icon.jpg">
+                        <h2>
+                            FEAST at Rieber
+                        </h2>
+                        <p>Pan-Asian cuisines</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="#locationname" onclick="hall = 'Covel';">
+                        <img src="images/covel_icon.jpg">
+                        <h2>
+                            Covel
+                        </h2>
+                        <p>Get a bruin burger here :)</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="#locationname" onclick="hall = 'De Neve';">
+                        <img src="images/de neve_icon.jpg">
+                        <h2>
+                            De Neve
+                        </h2>
+                        <p>Home-style American comfort food</p>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div data-role="page" data-control-title="{{Location Name}}" id="locationname">
+        <div data-role="content">
+            <ul data-role="listview" data-inset="true">
+                <li>
+                    <a href onclick="time = 'Lunch'; getItems();">
+                        <h2>
+                            Lunch
+                        </h2>
+                    </a>
+                </li>
+                <li>
+                    <a href onclick="time = 'Dinner'; getItems();">
+                        <h2>
+                            Dinner
+                        </h2>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div data-role="page" data-control-title="{{Location Name}} {{Meal Period}}" id="locationname mealperiod">
+        <div data-role="content">
+            <div data-role="collapsible-set" id="collapseSet">
+                <div data-role="collapsible" data-collapsed="false">
+                    <h3>Section 1</h3>
+                    <ul data-role="listview">
+                        <li>
+                            <a href="#locationname mealperiod itemid">
+                                <h2>
+                                    Food Item 1
+                                </h2>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#locationname mealperiod itemid">
+                                <h2>
+                                    Food Item 2
+                                </h2>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div data-role="collapsible">
+                    <h3>Section 2</h3>
+                    <ul data-role="listview">
+                        <li>
+                            <a href="#locationname mealperiod itemid">
+                                <h2>
+                                    Food Item 1
+                                </h2>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#locationname mealperiod itemid">
+                                <h2>
+                                    Food Item 2
+                                </h2>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div data-role="page" data-control-title="{{Item Name}}" id="locationname mealperiod itemid">
+        <div data-role="content">
+            <!--
+            .nfbox and everything inside it is scraped directly from the item detail
+            page on the menu website
+            http://menu.ha.ucla.edu/foodpro/recipedetail.asp?RecipeNumber=113001&PortionSize=4
+        -->
+        <div class="nfbox">
+            <h2 class="nftitle">Nutrition Facts</h2>
+
+            <p class="nfserv">Serving Size <span id="ss">4&nbsp;oz</span></p>
+            <p class="nfamt">Amount Per Serving</p>
+            <p class="nfcal"><span class="nfcaltxt">Calories</span> <span id="nfcal">174</span> <span class="nffatcal">Fat Cal. <span id="nffatcal">66</span></span></p>
+
+            <p class="nfdvhdr">% Daily Value*</p>
+            <p class="nfnutrient"><span class="nfmajornutrient">Total Fat</span> <span id="tfat">7.3g</span> <span class="nfdvval" id="tfatper"><span class="nfdvvalnum">11</span>%</span></p>
+            <div class="nfindent">
+                <p class="nfnutrient">Saturated Fat <span id="sfat">1.7g</span> <span class="nfdvval"><span class="nfdvvalnum" id="sfatper">9</span>%</span></p>
+                <p class="nfnutrient">Trans Fat <span id="trfat">0g</span> </p>
+            </div>
+            <p class="nfnutrient"><span class="nfmajornutrient">Cholesterol</span> <span id="chol">12.9mg</span> <span class="nfdvval" id="cholper"><span class="nfdvvalnum">4</span>%</span></p>
+            <p class="nfnutrient"><span class="nfmajornutrient">Sodium</span> <span id="sod">517.3mg</span> <span class="nfdvval" id="sodper"><span class="nfdvvalnum">34</span>%</span></p>
+            <p class="nfnutrient"><span class="nfmajornutrient">Total Carbohydrate</span> <span id="carb">18.4g</span> <span class="nfdvval" id="carbper"><span class="nfdvvalnum">14</span>%</span></p>
+            <div class="nfindent">
+                <p class="nfnutrient">Dietary Fiber <span id="fib">6.6g</span> <span class="nfdvval" id="fibper"><span class="nfdvvalnum">17</span>%</span></p>
+                <p class="nfnutrient">Sugars <span id="sug">3.9g</span> </p>
+            </div>
+            <p class="nfnutrient"><span class="nfmajornutrient">Protein</span> <span id="prot">10g</span> </p>
+
+            <div class="nfvitfirst">
+
+
+                <span class="nfvitleft"><span class="nfvitname">Vitamin A</span> <span class="nfvitpct" id="vitA">186%</span></span>
+                &bull;
+                <span class="nfvitright"><span class="nfvitname">Vitamin C</span> <span class="nfvitpct" id="vitC">8%</span></span>
+            </div>
+            <div class="nfvit">
+                <span class="nfvitleft"><span class="nfvitname">Calcium</span> <span class="nfvitpct" id="calc">3%</span></span>
+                &bull;
+                <span class="nfvitright"><span class="nfvitname">Iron</span> <span class="nfvitpct" id="iron">32%</span></span>
+
+            </div>
+            <div class="nfdisclaimer">*Percent Daily Values (DV) are based on a 2,000 calorie diet.</div>
+
+        </div>
+
+        <div class="ingredientslist">
+            <h3>Ingredients:</h3>
+            <p id="ing">
+                Black Lentils (Black Lentils, Sea Salt), Carrots, Andouille Sausage, Olive Oil Blend, Garlic, Herbs De Provence, Sea Salt, Black Pepper
+            </p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

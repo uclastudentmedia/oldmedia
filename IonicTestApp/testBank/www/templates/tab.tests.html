@@ -1,0 +1,11 @@
+<ion-view view-title="Tests">
+  <ion-content class="has-header">
+    <ion-refresher
+      pulling-text="Pull to refresh..."
+      on-refresh="doRefresh()">
+    </ion-refresher>
+    <ion-item href="#/tab/tests/{{highlight.id}}" class="item" ng-repeat="highlight in highlights">
+        {{highlight.name}}
+      </ion-item>
+  </ion-content>
+</ion-view>

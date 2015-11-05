@@ -1,0 +1,12 @@
+v1: (Last update 5/2/2013): Initial commit; Sketch of base GUI outputted by Codiqa; set up feedback form and temporary array; set up initial documentation
+v2: (Last update 5/8/2013): Now has color gradient on the side of each listview
+v3: (Last update 5/9/2013): Updated with framework for page displayed for each listview item; does NOT update dynamically yet; setup redirect from feedback form to the home form; alert popup to notify use form submission
+v4: (Last update 5/9/2013): Setup page population to create a page for each listview item; setup dynamic changes for page population; changed some words on feedback page; implemented weighted average to replace previous average-system, now takes full advantage of all 32 color gradients; fixed back button icon; setup map to place markers at points defined by the nameArray
+v5: (Last update 5/14/2013): Setup the timestamp that stores the time the last entry was submitted; setup an update method to update each content page with the time elapsed
+v6: (Last update 5/15/2013): Overhauled the current system to use a new updatedArray, records every entry instead of averaging and saving the average (necessary to setup the framework for removing old data); some reorganization of core methods; created removeOld method to remove all old entries; updated onclick for homepage links to remove all the old stuff; fixed bug where removeOld would cause indexOutOfBoundsExceptions
+
+aaa
+
+Still TODO:
+- Firebase
+- Theme?

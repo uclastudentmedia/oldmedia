@@ -1,0 +1,37 @@
+<html>
+	<head>
+        <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+        <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+        
+		<script src="js/jstorage.js"></script>
+
+        <script type='text/javascript'>
+        	var myDataRef = new Firebase('https://uclastudentmedia.firebaseio.com/bisForms');
+                var newRef = new Firebase('https://uclastudentmedia.firebaseio.com/bisForms/F14');
+        	var businesses = new Array();
+        	var constantTime = 1401628926234;
+
+                var tempArray = new Array();
+
+        	$(document).ready( function() {
+                        myDataRef.child('curr').once('value', function( dataSnapshot ) {
+                                var data = dataSnapshot.val();
+                                var orig = Object.keys(data).length;
+                                var totalRecords = 0;
+
+                                for( var i in data )
+                                {
+                                        newRef.push(data[i]);
+                                        totalRecords++;
+                                }
+
+                                console.log("Of " + orig + " records, " + totalRecords + " records were copied");
+                        }); 
+        	});
+        </script>
+	</head>
+	<body>
+		<h1>Maintenance Program</h1>
+		<h3>This is placeholder text :)</h3>
+	</body>
+</html>

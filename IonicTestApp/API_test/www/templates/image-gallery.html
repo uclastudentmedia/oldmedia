@@ -1,0 +1,19 @@
+<ion-view view-title="Gallery">
+	<ion-nav-buttons side="right">
+		<button class="button button-clear" ng-click="saveImages()">Save</button>
+	</ion-nav-buttons>
+	<ion-content class="has-header" scrollbar-y="false">
+		<ion-slide-box show-pager="false">
+			<ion-slide ng-repeat="image in imageList" ng-init="updateSlider()" ng-click="openModal()">
+				<div class="fit-img">
+					<img ng-src="{{image.image_large_thumbnail_url}}" />
+				</div>
+			</ion-slide>
+		</ion-slide-box>
+	</ion-content>
+	<div class="bar bar-footer bar-custom">
+		<button ng-click="prevImg()" class="button icon-left ion-chevron-left button-clear"></button>
+		<div class="title">{{imageList[cur_index()].name}}</div>
+		<button ng-click="nextImg()" class="button icon-right ion-chevron-right button-clear"></button>
+	</div>
+</ion-view>

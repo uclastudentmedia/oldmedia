@@ -1,0 +1,14 @@
+<ion-view>
+    <ion-nav-title ng-bind="event.title"></ion-nav-title>
+	<ion-content class="has-header">
+        <h1 class="item item-divider item-text-wrap"><b>{{event.title}}</b></h1>
+        <div class="item item-text-wrap">
+			<span ng-if="valid(event.start_date)" ><b>Start: </b> {{showDate(event.start_date)}} at {{showTime(event.start_date)}}</span>
+			<span ng-if="valid(event.end_date)"><br /><b>End: </b> {{showDate(event.end_date)}} at {{showTime(event.end_date)}}</span>
+        </div>
+        <p ng-if="valid(event.location)" class="item item-divider"><b>Location</b></p>
+        <p ng-if="valid(event.location)" class="item item-text-wrap">{{event.location}}</p>
+        <p class="item item-divider"><b>Description</b></p>
+		<p class="item item-text-wrap">{{event.description}}</p>
+	</ion-content>
+</ion-view>

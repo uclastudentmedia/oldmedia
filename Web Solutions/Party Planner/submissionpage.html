@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="themes/colors.css" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Party Tracker</title>
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.css" /> 
+  <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script> 
+  <script src="http://malsup.github.io/jquery.blockUI.js"></script> 
+  <script src="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.js"></script>
+  <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+  <script src="my.js"></script>
+
+  <!-- User-generated css -->
+  <style>
+		#footerTabs {
+			background: #FFF -webkit-radial-gradient(circle, #FFF, #dee2e4);
+		}
+		.ui-listview sup {
+			font-size: 0.6em;
+			color: #cc0000;
+		}
+		body
+		{
+			background-color:grey;
+		}
+		a.inv
+		{
+			visibility:hidden;
+		}
+
+	</style>
+
+  <!-- User-generated js --><script>function submitResponse(e,t){var n=[t,$.now()];myDataRef.child(keyDictionary[e]).child("submissions").push(n);alert("Your feedback has been recorded!")}var myDataRef=new Firebase("https://uclastudentmedia.firebaseio.com/partyTracker");var keyDictionary=new Object;$(document).ready(function(){myDataRef.once("value",function(e){var t=e.val();for(var n in t){keyDictionary[t[n]["name"]]=n}})}) </script>
+</head>
+<body>
+  <!-- Home -->
+  <!-- Submission -->
+  <div data-theme="f" data-role="page" id="page2">
+      <div data-theme="f" data-role="header">
+          <h3>Send Feedback</h3>
+      </div>
+      <div data-theme="f" data-role="content">
+          <div data-role="fieldcontain">
+              <label for="lbar">Where are you?</label>
+              <select id="lbar" name="">
+		            <option value='Alpha Epsilon Pi'>Alpha Epsilon Pi</option>
+                    <option value='Alpha Gamma Omega'>Alpha Gamma Omega</option>
+                    <option value='Beta Theta Pi'>Beta Theta Pi</option>
+                    <option value='Delta Sigma Phi'>Delta Sigma Phi</option>
+                    <option value='Delta Tau Delta'>Delta Tau Delta</option>
+                    <option value='Lambda Chi Alpha'>Lambda Chi Alpha</option>
+                    <option value='Phi Delta Theta'>Phi Delta Theta</option>
+                    <option value='Pi Kappa Alpha'>Pi Kappa Alpha</option>
+                    <option value='Pi Kappa Phi'>Pi Kappa Phi</option>
+                    <option value='Sigma Alpha Epsilon'>Sigma Alpha Epsilon</option>
+                    <option value='Sigma Chi'>Sigma Chi</option>
+                    <option value='Sigma Nu'>Sigma Nu</option>
+                    <option value='Sigma Phi Epsilon'>Sigma Phi Epsilon</option>
+                    <option value='Sigma Pi'>Sigma Pi</option>
+                    <option value='Theta Chi'>Theta Chi</option>
+                    <option value='Theta Delta Chi'>Theta Delta Chi</option>
+                    <option value='Theta Xi'>Theta Xi</option>
+                    <option value='Triangle'>Triangle</option>
+                    <option value='Zeta Beta Tau'>Zeta Beta Tau</option>
+              </select>
+          </div>
+          <div data-role="fieldcontain">
+              <label for="bbar">How busy is it? (1 = Empty, 5 = Full)</label>
+              <input id="bbar" type="range" name="slider" value="3" min="1" max="5" data-highlight="false">
+          </div>
+          <button type="button" id="sub" onclick="submitResponse($('#lbar').val(),6-$('#bbar').val())">Submit!</button>
+      </div>
+  </div>  
+</body>
+</html>

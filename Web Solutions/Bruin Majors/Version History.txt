@@ -1,0 +1,11 @@
+10/17/2013: Setup Codiqa layout and framework
+10/21/2013: Setup framework for adding classes; added visual addition of classes; setup back-end removal of classes; setup class-ID system for simple addition, identification, and removal
+10/22/2013: Setup visual removal of classes; modified class addition to use numerical input field instead of dropdown box; prohibit addition of repeatedclasses
+10/23/2013: Setup dynamic requirement addition system; added ID system for requirements for easy reference; optimized some poorly written code; check off completed classes; setup dynamic slider
+10/24/2013: Implemented page-load feature to fix bugs; setup automatic requirements-list folding (displays pre-major requirements when incomplete; switches when completed); disabled input for checkboxes and slider while still looking normal; setup framework for major-selection switching requirements
+10/25/2013: Fixed requirement-switch display issue, theme now updates; fixed slider not updating on switch; fixed input not registering for mobile devices; setup framework for creating pages fetched by AJAX
+10/26/2013: Page-generation now works, but is unthemed; setup framework for fetching requirement sections and major information by AJAX
+10/28/2013: Requirement section demo fetch works; switched page-generation to page-switching format which works; fixed lowercase-uppercase mismatch; finished home-page updating; major acronyms now pull from the database;
+10/29/2013: Updated home major select menu with more majors
+
+TODO: Autocomplete

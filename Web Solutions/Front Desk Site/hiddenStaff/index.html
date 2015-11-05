@@ -1,0 +1,144 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Secret Staff Site</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/js/client/2.0.2/firebase.js'></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+        <script src="http://malsup.github.io/jquery.blockUI.js"></script> 
+        <style type="text/css">
+            /* CSS */ 
+        </style>
+        <script>
+            var myDataRef = new Firebase('https://uclastudentmedia.firebaseio.com/frontdesk');
+            var staffRef = myDataRef.child('staff');
+
+            var staffList = new Array();
+
+            $(document).ready( function() {
+                $.blockUI({ 
+                    message: null, 
+                });
+
+                staffRef.once('value', function( dataSnapshot ) {
+                    var data = dataSnapshot.val();
+                    for( var staff in data )
+                    {
+                        staffList.push( new Staff( data[staff]['sName'], data[staff]['stID'], staff ));
+                    }
+
+                    popStaff();
+                    $.unblockUI();
+                });
+            });
+
+            // Staff Class
+            function Staff( sName, stID, sKey )
+            {
+                this.sName = sName;
+                this.stID = stID;
+                this.sKey = sKey;
+            }
+
+            Staff.prototype.sName = "";
+            Staff.prototype.stID = 0;
+            Staff.prototype.sKey = "";
+
+            Staff.prototype.getsName = function()
+            {
+                return this.sName;
+            }
+
+            Staff.prototype.getstID = function()
+            {
+                return parseInt(this.stID);
+            }
+
+            Staff.prototype.getsKey = function()
+            {
+                return this.sKey;
+            }
+
+            Staff.prototype.returnName = function( id )
+            {
+                for ( var i in staffList )
+                {
+                    if ( staffList[i].getstID() == id )
+                    {
+                        return staffList[i].getsName();
+                    }
+                }
+
+                return "";
+            }
+
+            function popStaff() 
+            {
+                $("#editPerson").empty();
+                for( var i = 0; i < staffList.length; i++ )
+                {
+                    $("#editPerson").append("<option value='" + i + "'>" + staffList[i].getsName() + "</option>");
+                }
+                $("#editPerson").listview().listview('refresh');
+            }
+
+            function fillInfo( i ) 
+            {
+                $("#editName").val(staffList[i].getsName());
+                $("#editID").val(staffList[i].getstID());
+            }
+
+            function submitStaff( name, id )
+            {
+                staffRef.push( {sName: name, stID: id}, function() { alert("Staff submitted successfully!"); window.location.reload(); } );
+            }
+
+            function updateStaff( name, id, key )
+            {
+                staffRef.child(key).update( {sName: name, stID: id}, function() { alert("Staff updated successfully!"); window.location.reload(); } );
+            }
+
+            function removeStaff( key )
+            {
+                if( confirm("Are you sure you want to delete " + staffList[parseInt($("#editPerson").val())].getsName() +"?"))
+                    staffRef.child(key).remove( function() {
+                        alert("Staff deleted successfully!");
+                        window.location.reload();
+                    });
+            }
+        </script>
+    </head>
+    <body>
+        <div data-role="content">
+            <h1>Add Staff</h1>
+            <div>
+                <label for="addName">Name: </label>
+                <input type="text" id="addName" placeholder="Enter Name...">
+                <label for="addID">Student ID: </label>
+                <input type="text" id="addID" placeholder="Enter Student ID...">
+                <button type="submit" onclick="submitStaff($('#addName').val(), $('#addID').val())">Submit</button>
+            </div>
+
+            <h1>Edit Staff</h1>
+            <div>
+                <label for="editPerson">Staff:</label>
+                <select id="editPerson" data-mini="true" onchange="fillInfo(parseInt($('#editPerson').val()))">
+                    <option value="">Staff</option>
+                    <option value="" disabled="disabled">---------------</option>
+                </select>
+                <label for="editName">Name: </label>
+                <input type="text" id="editName" placeholder="Enter Name...">
+                <label for="editID">Student ID: </label>
+                <input type="text" id="editID" placeholder="Enter Student ID...">
+                <button type="submit" onclick="updateStaff($('#editName').val(), $('#editID').val(), staffList[parseInt($('#editPerson').val())].getsKey())">Submit</button>
+                <button type="submit" onclick="removeStaff(staffList[parseInt($('#editPerson').val())].getsKey())">Delete</button>
+            </div>
+        </div>
+    </body>
+</html>

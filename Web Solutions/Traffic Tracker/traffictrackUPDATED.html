@@ -1,0 +1,249 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Dining Hall Traffic</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" rel="stylesheet">
+        <script type='text/javascript' src='https://cdn.firebase.com/js/client/2.0.2/firebase.js'></script>
+
+        <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+        <script src="http://malsup.github.io/jquery.blockUI.js"></script>
+        <style type="text/css">
+            /* CSS */ 
+        </style>
+        <script>
+            // Javascript
+        
+        var nameArray = ["De Neve", "FEAST at Rieber", "Covel", "Bruin Plate", "Bruin Cafe", "Late Night"];
+        var idLookup = {
+            "De Neve": "DeNeve",
+            "FEAST at Rieber": "FEAST", 
+            "Covel": "Covel", 
+            "Bruin Plate": "BPlate", 
+            "Bruin Cafe": "BCafe", 
+            "Late Night": "LateNight"
+        };
+        var myDataRef = new Firebase("https://uclastudentmedia.firebaseio.com/trafficTracker");
+        var oldestTimesArray = [0, 0, 0, 0];
+        var keyDictionary = new Object;
+        var curCrowd;
+        
+        //Adds submission n to myDataRef, updates Firebase with new submission entry under hall name
+        function submitResponse(hallName, crowdedLevel) {
+            var n = [crowdedLevel, $.now(), 0];
+            myDataRef.child(keyDictionary[hallName]).child("submissions").push(n);
+            alert("Your feedback has been recorded!");
+        }
+        
+        //cleans Firebase entries in keyArray from submission database under hallName
+        function removeOld(hallName, keyArray) {
+            var n = myDataRef.child(keyDictionary[hallName]).child("submissions");
+            for (var r = 0; r < keyArray.length; r++) {
+                n.child(keyArray[r]).remove()
+            }
+        }
+        
+        //looks at submission database, checks timestamp, if older than 36e5 milliseconds, add to Array, return Array
+        function findKeysToRemove(submissions) {
+            var t = new Array;
+            $.each(submissions, function (key, value) {
+                var r = parseInt($.now()) - parseInt(value[1]);
+                if (r > 36e5) {
+                    t.push(key)
+                }
+            });
+            return t
+        }
+        
+        function setAttributes(el, attrs) {
+            for(var key in attrs) {
+                el.setAttribute(key, attrs[key]);
+            }
+        }
+        function parseTimeDifference(e) {
+            var t = parseInt($.now()) - parseInt(e);
+            
+            if (t < 5e3) {
+                return "just now"
+            } else if (t >= 5e3 && t < 6e4) {
+                return Math.round(t / 1e3) + " seconds ago"
+            } else if (t >= 6e4 && t < 36e5) {
+                return Math.round(t / 6e4) + " minutes ago"
+            } else if (t >= 36e5 && t < 864e5) {
+                return Math.round(t / 36e5) + " hours ago"
+            } else if (t >= 864e5 && t < 6048e5) {
+                return Math.round(t / 864e5) + " days ago"
+            } else {
+                return "a long time ago"
+            }
+        }
+        
+        function returnPhrase(e)
+        {
+            if ( e >= 1 && e < 1.2 )
+                return "Completely empty";
+            else if ( e >= 1.2 && e < 1.67 )
+                return "Almost empty";
+            else if ( e >= 1.67 && e < 2 )
+                return "Quarter full";
+            else if ( e >= 2 && e < 2.33 )
+                return "Lots of space";
+            else if ( e >= 2.33 && e < 2.67 )
+                return "Less than half full";
+            else if ( e >= 2.67 && e < 3.33 )
+                return "Half full";
+            else if ( e >= 3.33 && e < 3.67 )
+                return "More than half full";
+            else if ( e >= 3.67 && e < 4 )
+                return "Crowded but manageable";
+            else if ( e >= 4 && e < 4.33 )
+                return "Crowded";
+            else if ( e >= 4.33 && e < 4.8 )
+                return "Almost full";
+            else if ( e >= 4.8 && e <= 5 )
+                return "Completely full";
+        }
+
+        function chooseColor(rating){
+            color_number = (5 - rating)/ 5 * 150;
+        
+            return ("hsl(" + color_number + ", 100%, 50%)");
+        }
+        var j;
+        function addTextandButton(index, element){
+            j = element;
+            var item = document.createElement("li");
+            item.setAttribute("class", "ui-li-static ui-body-inherit ui-first-child");
+            item.innerHTML = "How busy is <b>" + nameArray[index] + "</b>?" +
+                "<p class=\"ui-li-aside\" style=\"font-size:.70em\"></p>";
+            var button = document.createElement("li");
+            button.setAttribute("class", "ui-li-static ui-body-inherit ui-first-child");
+            var submit = document.createElement("button");
+            setAttributes(submit, {
+                class: "ui-btn",
+                value: "Submit!",
+                onclick: "submitResponse( '" + nameArray[index] + "' ,$( '#slider" + index + "' ).val());"
+            });
+            submit.appendChild(document.createTextNode("Submit!"));
+            button.appendChild(submit);
+            element.children[1].children[0].insertBefore(item, element.children[1].children[0].children[0]);
+            element.children[1].children[0].appendChild(button);
+        }
+        function populatemenu()  {
+            $( '<b class="ui-li-desc">1 = Empty, 5 = Full</b>' ).prependTo( 'li' );
+            $( '#dininghalls' ).children().each(addTextandButton);
+            $( '#dininghalls' ).collapsibleset("refresh");
+        }
+        function updateValues(dininghall) {
+            var r = 0, size = 0, entry;
+            var submissions = dininghall["submissions"];
+            for (var i in submissions) {
+                entry = submissions[i];
+                r += parseInt(entry[0]);
+                size++;
+            }
+            r /= size;
+            var hall = $( "#" + idLookup[dininghall["name"]] );
+            var recentTime = parseTimeDifference(entry[1]);
+            hall.find( "h2" ).attr("style", "border-left: thick solid " + chooseColor(r));
+            hall.find( ".ui-li-count" ).text(r.toPrecision(3));
+            hall.find( ".ui-li-count" ).attr("style", "background-color:" + chooseColor(r));
+            hall.find( ".ui-li-aside" ).html("Last updated: <b style=\".75em\">" + recentTime + " (" + entry[0] + ")</b>");
+        }
+        $(document).ready(function () {
+            if( window.location.hash != "#loaded" )
+            {
+                window.location = '#loaded';
+                window.location.reload();
+            }
+            $.blockUI({
+                message: null
+            });
+            populatemenu();
+            myDataRef.once("value", function (e) {
+                var t = e.val();
+                for (var n in t) {
+                    if (t[n]["type"] != "dininghall")
+                        continue;
+                    keyDictionary[(t[n]["name"])] = n;
+                    updateValues(t[n]);
+                }
+                $("[data-role='collapsible']").collapsible({
+                    collapse: function( event, ui ) {
+                    $(this).children().next().slideUp(150);
+                },
+                expand: function( event, ui ) {
+                    $(this).children().next().hide();
+                    $(this).children().next().slideDown(150);
+                }
+                });
+                $("#overlay").fadeOut();
+                $.unblockUI()
+            });
+            myDataRef.on("child_changed", function (e, t) {
+                n = e.val();
+                removeOld( n['name'], findKeysToRemove(n['submissions']));
+                updateValues(n);
+            });
+        });
+        </script>
+    </head>
+    <body>
+      <div data-role="content">
+        <div data-role="collapsibleset" data-theme="a" id="dininghalls" data-iconpos="none">
+          <div data-role="collapsible" id="DeNeve">
+            <h2>De Neve <span class="ui-li-count"></span></h2>
+            <ul data-role="listview" data-icon="false" class="hallmenu">
+            <li class="ui-field-contain">
+                <input type="range" name="slider" id="slider0" value="3" min="1" max="5" data-highlight="true">
+            </li>
+            </ul>
+          </div>
+          <div data-role="collapsible" id="FEAST" data-icon="false">
+            <h2>FEAST at Rieber <span class="ui-li-count"></span></h2>
+            <ul data-role="listview" data-icon="false" class="hallmenu">
+            <li class="ui-field-contain">
+                <input type="range" name="slider" id="slider1" value="3" min="1" max="5" data-highlight="true">
+            </li>
+            </ul>
+          </div>
+          <div data-role="collapsible" id="Covel">
+            <h2>Covel <span class="ui-li-count"></span></h2>
+            <ul data-role="listview" data-icon="false" class="hallmenu">
+            <li class="ui-field-contain">
+                <input type="range" name="slider" id="slider2" value="3" min="1" max="5" data-highlight="true">
+            </li>
+            </ul>
+          </div>
+          <div data-role="collapsible" id="BPlate">
+            <h2>Bruin Plate <span class="ui-li-count"></span></h2>
+            <ul data-role="listview" data-icon="false" class="hallmenu">
+            <li class="ui-field-contain">
+                <input type="range" name="slider" id="slider3" value="3" min="1" max="5" data-highlight="true">
+            </li>
+            </ul>
+          </div>
+          <div data-role="collapsible" id="BCafe">
+            <h2>Bruin Cafe <span class="ui-li-count"></span></h2>
+            <ul data-role="listview" data-icon="false" class="hallmenu">
+            <li class="ui-field-contain">
+                <input type="range" name="slider" id="slider4" value="3" min="1" max="5" data-highlight="true">
+            </li>
+            </ul>
+          </div>
+          <div data-role="collapsible" id="LateNight">
+            <h2>De Neve Late Night <span class="ui-li-count"></span></h2>
+            <ul data-role="listview" data-icon="false" class="hallmenu">
+            <li class="ui-field-contain">
+                <input type="range" name="slider" id="slider5" value="3" min="1" max="5" data-highlight="true">
+            </li>
+            </ul>
+          </div>          
+        </div>
+      </div>
+    </body>
+</html>

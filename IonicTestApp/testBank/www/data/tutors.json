@@ -1,0 +1,102 @@
+[
+    {
+        "is_featured": false, 
+        "subtitle": "", 
+        "wp_byline": "", 
+        "creation_date": "2014-10-13 13:35:46", 
+        "images": [], 
+        "poster_image": null, 
+        "wp_thumbnail": "", 
+        "tall_image_url": "", 
+        "id": 6913, 
+        "byline": "", 
+        "modification_date": "2014-10-13T13:39:53.841", 
+        "title": "French- Jessie G.", 
+        "content": "\r\nWilling to tutor French 1-6. Fluent in french.\r\n\r\nRate: $20 an hour", 
+        "hide_title": false, 
+        "comment_count": 0, 
+        "teaser_text": "Willing to tutor French 1-6. Fluent in french.\nRate: $20 an hour", 
+        "poster_url": "", 
+        "tall_image_thumbnail_url": "", 
+        "teaser_html": "<p>Willing to tutor French 1-6. Fluent in french.</p>\n<p>Rate: $20 an hour</p>", 
+        "status": "publish", 
+        "teaser": "", 
+        "user": {
+            "username": "ccrinion", 
+            "profile": {
+                "bio": "", 
+                "location": ""
+            }, 
+            "first_name": "Claire", 
+            "last_name": "Crinion", 
+            "is_member": false, 
+            "is_moderator": false, 
+            "phone": null, 
+            "avatar_url": "", 
+            "date_joined": "2014-01-14T18:39:58"
+        }, 
+        "slug": "french", 
+        "comment_status": "open", 
+        "instructions": "", 
+        "permalink": "http://www.localresearch.com/blog/ucla-test-bank/2014/oct/13/french/", 
+        "wp_thumbnail_caption": "", 
+        "markup": "markdown", 
+        "tags_list": [
+            "tutors"
+        ], 
+        "image_url": "", 
+        "published": "2014-10-13T00:00:00", 
+        "content_html": "<p>Willing to tutor French 1-6. Fluent in french.</p>\n<p>Rate: $20 an hour</p>", 
+        "image_thumbnail_url": ""
+    }, 
+    {
+        "is_featured": false, 
+        "subtitle": "", 
+        "wp_byline": "", 
+        "creation_date": "2014-02-14 14:58:27", 
+        "images": [], 
+        "poster_image": null, 
+        "wp_thumbnail": "", 
+        "tall_image_url": "", 
+        "id": 4202, 
+        "byline": "", 
+        "modification_date": "2014-02-14T14:58:27.880", 
+        "title": "Communications - Chloe G.", 
+        "content": "Ready to tutor students in Comm 100 or Comm 10.\r\n\r\nRates: $25/hour\r\n", 
+        "hide_title": false, 
+        "comment_count": 2, 
+        "teaser_text": "Ready to tutor students in Comm 100 or Comm 10.\nRates: $25/hour", 
+        "poster_url": "", 
+        "tall_image_thumbnail_url": "", 
+        "teaser_html": "<p>Ready to tutor students in Comm 100 or Comm 10.</p>\n<p>Rates: $25/hour</p>", 
+        "status": "publish", 
+        "teaser": "", 
+        "user": {
+            "username": "ngreitzer", 
+            "profile": {
+                "bio": "Bruinwalk.com Editor-in-Chief", 
+                "location": "Encino, California"
+            }, 
+            "first_name": "Nicholas", 
+            "last_name": "Greitzer", 
+            "is_member": false, 
+            "is_moderator": false, 
+            "phone": null, 
+            "avatar_url": "http://www.localresearch.com/site_media/media/avatars/bmobilelogofinal.png", 
+            "date_joined": "2011-07-06T20:39:56"
+        }, 
+        "slug": "communications-chloe-g", 
+        "comment_status": "open", 
+        "instructions": "", 
+        "permalink": "http://www.localresearch.com/blog/ucla-test-bank/2014/feb/14/communications-chloe-g/", 
+        "wp_thumbnail_caption": "", 
+        "markup": "markdown", 
+        "tags_list": [
+            "tutors"
+        ], 
+        "image_url": "", 
+        "published": "2014-02-14T00:00:00", 
+        "content_html": "<p>Ready to tutor students in Comm 100 or Comm 10.</p>\n<p>Rates: $25/hour</p>", 
+        "image_thumbnail_url": ""
+    }
+]
