@@ -69,7 +69,12 @@ var counter = 0;
 var interval = 5392;
 var timer;
 
-fs.readFile('2018.csv', function(err, data) {
+if (process.argv.length < 3) {
+  console.log("No filename given");
+  return;
+}
+
+fs.readFile(process.argv[2], function(err, data) {
   if(err) throw err;
   var names = data.toString().split('\n');
   names.pop(); // extra newline
