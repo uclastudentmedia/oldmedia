@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from bs4 import BeautifulSoup
 import urllib2
 import string
@@ -34,5 +32,5 @@ with io.open('orgs.csv', 'w', encoding='utf8') as f:
             page += 1
             for url in urls:
                 org = get_org(url)
-                print org['name'], '\n\t', org['email']
+                print org['name'], '\t', org['email']
                 f.write('"' + org['name'] + '", ' + org['email'] + '\n')
