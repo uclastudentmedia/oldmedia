@@ -66,7 +66,7 @@ var getEmail = function(html, name) {
 };
 
 var counter = 0;
-var interval = 5392;
+var interval = 5500;
 var timer;
 
 if (process.argv.length < 3) {
@@ -77,23 +77,21 @@ if (process.argv.length < 3) {
 fs.readFile(process.argv[2], function(err, data) {
   if(err) throw err;
   var names = data.toString().split('\n');
-  names.pop(); // extra newline
-  /*names.forEach(function(name) {
-    makeRequest(name);
-  });
-  */
-  //names = names.slice(0, 5);
+
   timer = setInterval(function() {
     if(names[counter] == '') {
       counter++;
       return;
     }
 
+    if (counter >= names.length) {
+      clearInterval(timer);
+	  return;
+	}
+
     console.error('requesting: ' + names[counter]);
 
     makeRequest(names[counter]);
     counter++;
-    if (counter >= names.length)
-      clearInterval(timer);
   }, interval);
 });
